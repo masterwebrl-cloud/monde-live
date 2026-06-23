@@ -169,13 +169,35 @@ async function fetchWorldCupMatches() {
 
 export default async (req: Request) => {
   try {
-    // Charge tous les 80 pays en parallèle
-    const epgPromises = COUNTRIES.map(cc => fetchEPG(cc));
+    const url = new URL(req.url);
+    const countriesParam = url.searchParams.get("countries") || "";
+    
+    // Si pas de pays spécifiés, retourne juste la liste des pays disponibles
+    if (!countriesParam) {
+      return Response.json({
+        countries: COUNTRIES.map(cc => ({
+          code: cc,
+          name: COUNTRY_NAMES[cc] || cc.toUpperCase(),
+          flag: COUNTRY_FLAGS[cc] || "🌍"
+        }))
+      }, {
+        headers: { "Cache-Control": "public, max-age=3600" }
+      });
+    }
+    
+    // Parse les pays demandés
+    const selectedCountries = countriesParam.split(",").filter(c => COUNTRIES.includes(c));
+    if (selectedCountries.length === 0) {
+      return Response.json({ error: "Aucun pays valide" }, { status: 400 });
+    }
+    
+    // Charge uniquement les pays sélectionnés
+    const epgPromises = selectedCountries.map(cc => fetchEPG(cc));
     const epgResults = await Promise.all(epgPromises);
     
     // Agrège les résultats
     const allProgrammes: any[] = [];
-    COUNTRIES.forEach((cc, idx) => {
+    selectedCountries.forEach((cc, idx) => {
       const progs = epgResults[idx] || [];
       progs.forEach(p => {
         allProgrammes.push({
@@ -195,7 +217,7 @@ export default async (req: Request) => {
       programmes: allProgrammes.sort((a, b) => a.start.localeCompare(b.start)),
       worldcupMatches: wcMatches,
     }, {
-      headers: { "Cache-Control": "public, max-age=300, s-maxage=3600" },
+      headers: { "Cache-Control": "public, max-age=300, s-maxage=3600" }
     });
   } catch (e: any) {
     return Response.json({ error: e?.message || "Erreur serveur" }, { status: 502 });
