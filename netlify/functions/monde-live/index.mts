@@ -37,6 +37,64 @@ const COUNTRY_FLAGS: Record<string, string> = {
   il: "🇮🇱", ng: "🇳🇬", za: "🇿🇦", ke: "🇰🇪", us: "🇺🇸", ca: "🇨🇦"
 };
 
+// ─── CLASSIFICATION AUTO DES CHAÎNES ───
+function classifyChannel(channelName: string): { type: string; icon: string } {
+  const name = channelName.toLowerCase().trim();
+  
+  // SPORT
+  if (/\b(sport|sports|sportv|sport tv|espn|bein|eurosport|sky sport|fox sport|nbc sport|rai sport|infosport|canal\+? sport|equipe|deporte|deportes|sportkanal|sportkanaal|sportszene|спорт|sportowy|football|futbol|fußball|calcio|tennis|nfl|nba|mlb|nhl|f1|formula|motogp|wrc|premier league|champions league|ligue 1|serie a|bundesliga|laliga)\b/i.test(name)) {
+    return { type: "sport", icon: "⚽" };
+  }
+  
+  // CINEMA / FILMS
+  if (/\b(cinema|cinéma|cine|movies?|filme?|kino|sky cinema|canal\+? cinema|action|aventure|thriller|horror|comedie|drame|drama|cinemax|moviestar|moviemax|fox movies|paramount|warner|hollywood|kinopolska|кино)\b/i.test(name)) {
+    return { type: "cinema", icon: "🎬" };
+  }
+  
+  // INFO / NEWS
+  if (/\b(news|info|infos|actu|actualité|cnn|bbc news|bfm|france info|euronews|sky news|fox news|al jazeera|rt|россия 24|wiadomości|tg|telejornal|noticias|nachrichten|24h|24/7|live news|breaking|journal|n-tv|notiziario)\b/i.test(name)) {
+    return { type: "info", icon: "📰" };
+  }
+  
+  // ADULTE / ÉROTIQUE
+  if (/\b(adult|adulte|adults|adultos|erotic|érotique|erotik|erotico|porn|porno|playboy|hustler|xxx|hot|sexy|sex|brazzers|spice|private|premium tv|red light|venus)\b/i.test(name)) {
+    return { type: "adulte", icon: "🔞" };
+  }
+  
+  // JEUNESSE / ENFANTS
+  if (/\b(disney|nick|nickelodeon|cartoon|kids|enfants|gulli|tiji|piwi|baby|junior|kiddoodles|disney channel|pl jr|cartoonito|boomerang|teletoon|nick jr|jim jam|baby tv|kiddoodles|pokemon|kayoom|разумник|dzieci|infantil|niños)\b/i.test(name)) {
+    return { type: "jeunesse", icon: "🧒" };
+  }
+  
+  // MUSIQUE
+  if (/\b(mtv|mcm|music|musique|musical|nrj|virgin|trace|m6 music|vh1|kiss tv|hit|melody|stingray|musica|musik|музыка|deezer|spotify)\b/i.test(name)) {
+    return { type: "musique", icon: "🎵" };
+  }
+  
+  // DOCUMENTAIRE
+  if (/\b(discovery|national geographic|nat geo|natgeo|histoire|history|geo|geographic|earth|planet|wildlife|nature|animal|animaux|science|doc|documentaire|documentary|документал|dokument|geo wild|geo earth)\b/i.test(name)) {
+    return { type: "documentaire", icon: "🌍" };
+  }
+  
+  // INTERNATIONAL
+  if (/\b(tv5|euronews|france 24|deutsche welle|dw|al jazeera|cnn international|bbc world|rt|rfi|nhk world|cgtn|press tv)\b/i.test(name)) {
+    return { type: "international", icon: "🌐" };
+  }
+  
+  // DIVERTISSEMENT
+  if (/\b(comedy|comédie|humour|humor|entertainment|divertissement|reality|nrj12|tf1 séries|w9|c8|6ter|tmc|tf x|paris première|tv land|tf6|stadthaubitze|teen|fashion tv|fashion)\b/i.test(name)) {
+    return { type: "divertissement", icon: "🎭" };
+  }
+  
+  // GÉNÉRALISTE (par défaut - main channels)
+  if (/\b(tf1|france 2|france 3|france 4|france 5|france ô|france info|m6|w9|c8|6ter|tmc|paris première|nrj12|bbc one|bbc two|bbc four|itv|channel 4|channel 5|ard|zdf|rtl|sat\.?1|pro7|prosieben|kabel|3sat|swr|wdr|ndr|hr|mdr|tve|antena|telecinco|cuatro|la 1|la 2|rai 1|rai 2|rai 3|rai 4|rai 5|canale 5|italia 1|rete 4|tve la 1|antena 3|laraía|rtbf|vrt|één|canvas|ketnet|vtm|sbs6|net5|veronica|rtl 4|rtl 5|rtl 7|rtl 8|polsat|tvn|tvp 1|tvp 2|tvp info|rtv slo|rtv 4|tve|estonia|россия 1|первый|перший|перший|stb|1\+1|inter)\b/i.test(name)) {
+    return { type: "generaliste", icon: "📺" };
+  }
+  
+  // PAR DÉFAUT
+  return { type: "generaliste", icon: "📺" };
+}
+
 function xmltvToISO(t: string | undefined): string | null {
   if (!t) return null;
   const m = t.trim().match(/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})?\s*([+-]\d{4})?/);
@@ -67,166 +125,74 @@ function decode(s: string): string {
     .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
 }
 
-// ─── EROTIC CATEGORIES (toutes langues) ───
 const EROTIC_CATEGORIES = [
-  // Anglais
   "erotic", "erotica", "porn", "pornography", "adult", "adult film", "adult movie", "xxx", "x-rated",
-  // Français
   "érotique", "érotisme", "pornographique", "porno", "adulte", "film adulte", "film érotique",
-  // Espagnol
-  "erótico", "erotismo", "pornográfico", "porno", "adultos", "películas eróticas", "pornográficas", "eróticas",
-  // Italien
-  "erotico", "erotici", "erotismo", "pornografico", "pornografici", "adulti", "cinema erotico", "film erotici", "sessualita",
-  // Allemand (Allemagne, Autriche, Suisse, Luxembourg)
-  "erotisch", "erotik", "erotikfilm", "erotisches herzkino", "knisternde erotik", "porno", "erwachsene", "fsk 18",
-  // Néerlandais (Pays-Bas, Belgique flamande)
-  "erotiek", "erotisch", "volwassenen", "porno", "porna", "voor volwassenen",
-  // Polonais
-  "erotyka", "erotyczny", "porno", "dla dorosłych", "dorośli", "erotyczne",
-  // Portugais (Portugal, Brésil)
-  "erótico", "pornografia", "pornográfico", "adultos", "filme erótico",
-  // Russe
+  "erótico", "erotismo", "pornográfico", "adultos", "películas eróticas", "pornográficas", "eróticas",
+  "erotico", "erotici", "pornografico", "pornografici", "adulti", "cinema erotico", "film erotici", "sessualita",
+  "erotisch", "erotik", "erotikfilm", "erotisches herzkino", "knisternde erotik", "erwachsene", "fsk 18",
+  "erotiek", "volwassenen", "porna", "voor volwassenen",
+  "erotyka", "erotyczny", "dla dorosłych", "dorośli", "erotyczne",
+  "erótico", "pornografia", "adultos", "filme erótico",
   "эротика", "эротический", "порно", "для взрослых", "взрослые",
-  // Ukrainien
   "еротика", "еротичний", "порно", "для дорослих",
-  // Tchèque
-  "erotický", "erotický film", "pornografie", "dospělí",
-  // Slovaque
-  "erotický", "erotika", "pornografia", "dospelí",
-  // Hongrois
+  "erotický", "pornografie", "dospělí", "dospelí",
   "erotikus", "erotika", "pornográfia", "felnőtt",
-  // Roumain
-  "erotic", "erotism", "pornografie", "adulți",
-  // Bulgare
-  "еротичен", "еротика", "порно", "за възрастни",
-  // Serbe/Croate/Bosnien
-  "erotski", "erotika", "porno", "za odrasle", "odrasli",
-  // Slovène
-  "erotični", "erotika", "porno", "za odrasle",
-  // Suédois
+  "erotic", "erotism", "adulți",
+  "еротичен", "еротика", "за възрастни",
+  "erotski", "erotika", "za odrasle", "odrasli",
   "erotik", "erotisk", "porr", "vuxen", "för vuxna",
-  // Norvégien
-  "erotikk", "erotisk", "porno", "voksen", "voksne",
-  // Danois
-  "erotisk", "porno", "voksne", "for voksne",
-  // Finnois
-  "eroottinen", "erotiikka", "porno", "aikuisille",
-  // Estonien
-  "erootika", "erootiline", "porno", "täiskasvanutele",
-  // Letton
-  "erotika", "erotisks", "porno", "pieaugušajiem",
-  // Lituanien
-  "erotika", "erotinis", "porno", "suaugusiems",
-  // Albanais
-  "erotik", "pornografi", "për të rritur",
-  // Grec
-  "ερωτικό", "ερωτισμός", "πορνογραφία", "ενηλίκων",
-  // Turc
-  "erotik", "pornografi", "yetişkin",
-  // Arabe (Égypte, Arabie Saoudite, EAU)
+  "erotikk", "porno", "voksen", "voksne",
+  "erotisk", "voksne", "for voksne",
+  "eroottinen", "erotiikka", "aikuisille",
+  "erootika", "erootiline", "täiskasvanutele",
+  "erotika", "erotisks", "pieaugušajiem",
+  "erotika", "erotinis", "suaugusiems",
+  "ερωτικό", "ερωτισμός", "ενηλίκων",
+  "erotik", "yetişkin",
   "إثارة", "إباحي", "للكبار", "بالغين",
-  // Hébreu
   "ארוטי", "פורנו", "למבוגרים",
-  // Chinois
-  "成人", "色情", "情色",
-  // Japonais
-  "アダルト", "成人", "エロ",
-  // Coréen
-  "성인", "에로",
-  // Thaï
-  "ผู้ใหญ่", "อีโรติก",
-  // Indonésien/Malais
-  "dewasa", "erotis", "porno",
-  // Vietnamien
-  "người lớn", "khiêu dâm", "tình dục",
-  // Hindi
-  "वयस्क", "अश्लील", "एडल्ट",
-  // Bengali
-  "প্রাপ্তবয়স্ক", "অশ্লীল"
+  "成人", "色情", "情色", "アダルト", "成人", "エロ",
+  "성인", "에로", "ผู้ใหญ่", "อีโรติก",
+  "dewasa", "erotis", "porno", "người lớn", "khiêu dâm", "tình dục",
+  "वयस्क", "अश्लील", "एडल्ट", "প্রাপ্তবয়স্ক", "অশ্লীল"
 ];
 
-// ─── WORLD CUP CATEGORIES (toutes langues) ───
 const WORLDCUP_TITLES = [
-  // Anglais
   "world cup", "fifa world cup", "fifa world cup 2026", "wc 2026", "fifa 2026",
-  // Français
   "coupe du monde", "coupe du monde 2026", "mondial", "mondial 2026", "cdm 2026",
-  // Espagnol
   "copa del mundo", "copa mundial", "mundial", "mundial 2026", "copa mundial fifa",
-  // Italien
   "coppa del mondo", "mondiali", "mondiali 2026", "coppa del mondo fifa",
-  // Allemand
   "weltmeisterschaft", "wm 2026", "fußball-wm", "fifa weltmeisterschaft",
-  // Néerlandais
   "wereldkampioenschap", "wk 2026", "wk voetbal",
-  // Polonais
-  "mistrzostwa świata", "mś 2026", "mundial",
-  // Portugais
-  "copa do mundo", "copa do mundo 2026", "mundial 2026",
-  // Russe
+  "mistrzostwa świata", "mś 2026",
+  "copa do mundo", "copa do mundo 2026",
   "чемпионат мира", "чм 2026", "кубок мира",
-  // Ukrainien
   "чемпіонат світу", "чс 2026",
-  // Tchèque
-  "mistrovství světa", "ms 2026", "fotbalové ms",
-  // Slovaque
-  "majstrovstvá sveta", "ms 2026",
-  // Hongrois
+  "mistrovství světa", "ms 2026",
+  "majstrovstvá sveta",
   "világbajnokság", "vb 2026",
-  // Roumain
   "campionatul mondial", "cupa mondială",
-  // Bulgare
-  "световно първенство", "световен куп",
-  // Serbe/Croate
+  "световно първенство",
   "svjetsko prvenstvo", "svetsko prvenstvo", "sp 2026",
-  // Slovène
   "svetovno prvenstvo",
-  // Suédois
-  "vm 2026", "fifa-vm", "världsmästerskap",
-  // Norvégien
-  "vm 2026", "verdensmesterskap",
-  // Danois
-  "vm 2026", "verdensmesterskab",
-  // Finnois
+  "vm 2026", "verdensmesterskap", "verdensmesterskab",
   "mm 2026", "maailmanmestaruus",
-  // Grec
-  "παγκόσμιο κύπελλο", "παγκόσμιο πρωτάθλημα",
-  // Turc
+  "παγκόσμιο κύπελλο",
   "dünya kupası", "fifa dünya kupası",
-  // Arabe
   "كأس العالم", "كأس العالم 2026",
-  // Hébreu
   "גביע העולם", "מונדיאל",
-  // Chinois
-  "世界杯", "国际足联世界杯",
-  // Japonais
-  "ワールドカップ", "fifaワールドカップ",
-  // Coréen
-  "월드컵", "fifa 월드컵",
-  // Thaï
+  "世界杯", "ワールドカップ", "월드컵",
   "ฟุตบอลโลก",
-  // Indonésien
-  "piala dunia", "piala dunia fifa",
-  // Vietnamien
-  "world cup", "cúp thế giới",
-  // Hindi
-  "विश्व कप", "फीफा विश्व कप",
-  // Bengali
-  "বিশ্বকাপ"
+  "piala dunia", "world cup", "cúp thế giới",
+  "विश्व कप", "फीफा विश्व कप", "বিশ্বকাপ"
 ];
 
-// ─── EXCLUSIONS (dessins animés, séries, etc.) ───
-const EXCLUSIONS = [
-  "dessin animé", "cartoon", "animated", "anime", "manga", "kids", "children", "enfant", "jeunesse", "famille", "family", "kinder", "kinderfilm", "dibujos animados", "cartone animato", "kreskówka", "bajka", "kreskówki"
-];
+const EXCLUSIONS = ["dessin animé", "cartoon", "animated", "anime", "kids", "children", "kinder", "kinderfilm", "dibujos animados", "cartone animato", "kreskówka"];
 
 function isEroticProgram(title: string, desc: string, cats: string[]): boolean {
   const titleLower = title.toLowerCase();
-  
-  // Exclure dessins animés/jeunesse
   if (EXCLUSIONS.some(kw => titleLower.includes(kw))) return false;
-  
-  // Vérifier les catégories explicitement érotiques
   const catsLower = cats.map(c => c.toLowerCase()).join(" ");
   return EROTIC_CATEGORIES.some(kw => catsLower.includes(kw));
 }
@@ -234,16 +200,10 @@ function isEroticProgram(title: string, desc: string, cats: string[]): boolean {
 function isWorldCupMatch(title: string, desc: string, cats: string[]): boolean {
   const titleLower = title.toLowerCase();
   const descLower = desc.toLowerCase();
-  
-  // Catégorie sport obligatoire
   const catsLower = cats.map(c => c.toLowerCase()).join(" ");
-  const isSport = catsLower.includes("sport") || catsLower.includes("fußball") || catsLower.includes("football") || catsLower.includes("soccer") || catsLower.includes("fútbol") || catsLower.includes("calcio") || catsLower.includes("voetbal") || catsLower.includes("piłka nożna") || catsLower.includes("futebol");
+  const isSport = catsLower.includes("sport") || catsLower.includes("fußball") || catsLower.includes("football") || catsLower.includes("soccer") || catsLower.includes("fútbol") || catsLower.includes("calcio") || catsLower.includes("voetbal") || catsLower.includes("piłka nożna");
   if (!isSport) return false;
-  
-  // Exclure dessins animés
   if (EXCLUSIONS.some(kw => titleLower.includes(kw))) return false;
-  
-  // Doit mentionner la Coupe du Monde
   const text = `${titleLower} ${descLower}`;
   return WORLDCUP_TITLES.some(kw => text.includes(kw));
 }
@@ -289,11 +249,18 @@ async function fetchEPG(countryCode: string) {
       
       const channelId = p["@_channel"];
       const channelName = channels[channelId] || channelId;
+      const channelClass = classifyChannel(channelName);
+      
       const title = decode(textOf(asArray<any>(p.title)[0])) || "Sans titre";
       const desc = decode(textOf(asArray<any>(p.desc)[0])) || "";
       const cats = asArray<any>(p.category).map(textOf).map(decode).filter(Boolean);
       
-      const prog = { channel: channelName, title, desc, start: startTime, stop: stopTime };
+      const prog = { 
+        channel: channelName, 
+        channelType: channelClass.type,
+        channelIcon: channelClass.icon,
+        title, desc, start: startTime, stop: stopTime 
+      };
       
       if (isEroticProgram(title, desc, cats)) erotica.push(prog);
       if (isWorldCupMatch(title, desc, cats)) worldcup.push(prog);
