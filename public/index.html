@@ -23,19 +23,55 @@ header { background: linear-gradient(180deg, var(--ink-2), var(--ink)); border-b
 h1 { font-size: 48px; font-weight: 800; }
 .dot { color: var(--gold); }
 .tag { color: var(--muted); font-size: 12px; text-transform: uppercase; margin-top: 8px; }
-.country-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; max-height: 500px; overflow-y: auto; padding: 20px; background: var(--panel); border-radius: 9px; margin: 20px 0; }
-.country-item { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px; border-radius: 8px; background: var(--ink); border: 1px solid var(--line); cursor: pointer; transition: all 0.12s; user-select: none; }
+
+.continent { margin-bottom: 24px; }
+.continent-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; background: var(--panel); border-radius: 9px 9px 0 0;
+  cursor: pointer; user-select: none; border: 1px solid var(--line);
+}
+.continent-header:hover { border-color: var(--gold); }
+.continent-icon { font-size: 24px; }
+.continent-name { font-weight: 700; font-size: 16px; flex: 1; }
+.continent-count { font-size: 12px; color: var(--muted); }
+.continent-toggle { color: var(--gold); font-size: 14px; }
+.continent-body { 
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 10px; padding: 16px; background: var(--ink-2); 
+  border-left: 1px solid var(--line); border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line); border-radius: 0 0 9px 9px;
+}
+.continent.collapsed .continent-body { display: none; }
+.continent.collapsed .continent-toggle::after { content: " ▼"; }
+.continent:not(.collapsed) .continent-toggle::after { content: " ▲"; }
+
+.country-item {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 12px; border-radius: 8px;
+  background: var(--ink); border: 1px solid var(--line);
+  cursor: pointer; transition: all 0.12s; user-select: none;
+}
 .country-item:hover { border-color: var(--gold); }
 .country-item.selected { background: var(--gold); color: var(--ink); font-weight: 600; }
-.country-flag { font-size: 32px; }
+.country-flag { font-size: 28px; }
 .country-name { font-size: 10px; text-align: center; word-break: break-word; }
-.actions { display: flex; gap: 12px; margin: 20px 0; justify-content: center; flex-wrap: wrap; }
+
+.actions { 
+  display: flex; gap: 12px; margin: 20px 0; justify-content: center; 
+  flex-wrap: wrap; position: sticky; bottom: 20px;
+  background: var(--ink); padding: 12px; border-radius: 9px;
+  border: 1px solid var(--line);
+  z-index: 10;
+}
 .actions button { border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; }
 .actions .submit { background: var(--gold); color: var(--ink); }
 .actions .cancel { background: var(--panel); color: var(--text); border: 1px solid var(--line); }
+.actions .submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
 .controls { display: flex; gap: 12px; margin: 20px 0; flex-wrap: wrap; }
 .controls button { background: var(--panel); border: 1px solid var(--line); color: var(--text); padding: 10px 16px; border-radius: 8px; cursor: pointer; }
 .controls button.active { background: var(--gold); color: var(--ink); font-weight: 600; }
+
 .items { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
 .item { background: var(--panel); border: 1px solid var(--line); border-radius: 9px; padding: 14px; transition: all 0.12s; }
 .item.erotica { border-color: #ff69b4; }
@@ -51,9 +87,10 @@ h1 { font-size: 48px; font-weight: 800; }
 .state { text-align: center; padding: 60px 20px; color: var(--muted); }
 .spinner { width: 32px; height: 32px; border: 3px solid var(--line); border-top-color: var(--gold); border-radius: 50%; margin: 0 auto 16px; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
-.hidden { display: none; }
 h2 { font-size: 20px; margin: 20px 0 10px; }
 .subtitle { color: var(--muted); font-size: 12px; margin-bottom: 20px; }
+.summary { background: var(--panel); padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; border: 1px solid var(--gold); }
+.summary strong { color: var(--gold); }
 </style>
 </head>
 <body>
@@ -69,6 +106,30 @@ h2 { font-size: 20px; margin: 20px 0 10px; }
 <script>
 const state = { countries: [], selectedCountries: [], data: null, stage: "select", filter: "all" };
 
+// Organisation par continents
+const CONTINENTS = {
+  europe: {
+    icon: "🌍", name: "Europe",
+    codes: ["fr", "gb", "es", "it", "de", "be", "ch", "pl", "nl", "at", "cz", "dk", "fi", "se", "no", "pt", "gr", "hu", "ro", "bg", "sk", "si", "hr", "ba", "rs", "me", "ua", "by", "ie", "is", "al", "ad", "ee", "lv", "lt", "lu", "mt", "md", "mc", "sm", "xk", "li"]
+  },
+  asia: {
+    icon: "🌏", name: "Asie",
+    codes: ["ru", "tr", "kz", "uz", "tm", "tj", "kg", "ge", "am", "az", "af", "bd", "bt", "in", "lk", "mv", "np", "pk", "jp", "kr", "cn", "th", "my", "sg", "id", "ph", "vn", "sa", "ae", "il"]
+  },
+  africa: {
+    icon: "🌍", name: "Afrique",
+    codes: ["eg", "ng", "za", "ke", "mu", "sc"]
+  },
+  americas: {
+    icon: "🌎", name: "Amériques",
+    codes: ["us", "ca", "mx", "br", "ar", "cl", "co", "pe", "ve", "ec", "gy", "py", "sr", "uy", "bz", "cr", "sv", "gt", "hn", "ni", "pa", "jm", "tt", "bs", "dm", "pr", "ag", "bb", "gd"]
+  },
+  oceania: {
+    icon: "🌏", name: "Océanie",
+    codes: ["au", "nz", "fj", "pf", "sb", "vu"]
+  }
+};
+
 async function init() {
   try {
     const res = await fetch("/api/monde-live");
@@ -80,54 +141,109 @@ async function init() {
   }
 }
 
+function getCountryByCode(code) {
+  return state.countries.find(c => c.code === code);
+}
+
 function renderSelector() {
   let html = `
     <h2>🌍 Sélectionne les pays</h2>
-    <p class="subtitle">Choisis 1 ou plusieurs pays pour voir les films érotiques et matchs en direct</p>
-    <div class="country-grid" id="grid">`;
-  state.countries.forEach(c => {
-    html += `<div class="country-item" data-code="${c.code}">
-      <span class="country-flag">${c.flag}</span>
-      <span class="country-name">${c.name}</span>
-    </div>`;
-  });
-  html += `</div>
+    <p class="subtitle">Choisis 1 ou plusieurs pays pour voir les films érotiques et matchs en direct</p>`;
+  
+  // Compteur de sélection
+  if (state.selectedCountries.length > 0) {
+    html += `<div class="summary"><strong>${state.selectedCountries.length}</strong> pays sélectionné(s)</div>`;
+  }
+  
+  // Affichage par continent
+  for (const [contKey, cont] of Object.entries(CONTINENTS)) {
+    const continentCountries = cont.codes
+      .map(code => getCountryByCode(code))
+      .filter(c => c !== undefined);
+    
+    if (continentCountries.length === 0) continue;
+    
+    const isCollapsed = false; // Tous ouverts par défaut
+    const selectedInCont = continentCountries.filter(c => state.selectedCountries.includes(c.code)).length;
+    
+    html += `<div class="continent ${isCollapsed ? 'collapsed' : ''}" data-continent="${contKey}">
+      <div class="continent-header" onclick="toggleContinent('${contKey}')">
+        <span class="continent-icon">${cont.icon}</span>
+        <span class="continent-name">${cont.name}</span>
+        <span class="continent-count">${selectedInCont}/${continentCountries.length} pays</span>
+        <button onclick="event.stopPropagation(); selectContinent('${contKey}')" style="background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer;">Tout sélectionner</button>
+        <button onclick="event.stopPropagation(); deselectContinent('${contKey}')" style="background: transparent; border: 1px solid var(--muted); color: var(--muted); padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer;">Désélectionner</button>
+        <span class="continent-toggle"></span>
+      </div>
+      <div class="continent-body">`;
+    
+    continentCountries.forEach(c => {
+      const isSelected = state.selectedCountries.includes(c.code);
+      html += `<div class="country-item ${isSelected ? 'selected' : ''}" data-code="${c.code}" onclick="toggleCountry('${c.code}')">
+        <span class="country-flag">${c.flag}</span>
+        <span class="country-name">${c.name}</span>
+      </div>`;
+    });
+    
+    html += `</div></div>`;
+  }
+  
+  html += `
     <div class="actions">
-      <button class="submit" onclick="submitSelection()">Charger les données</button>
+      <button class="submit" onclick="submitSelection()" ${state.selectedCountries.length === 0 ? 'disabled' : ''}>
+        Charger les données (${state.selectedCountries.length})
+      </button>
       <button class="cancel" onclick="selectAll()">Tous les pays</button>
       <button class="cancel" onclick="clearSelection()">Réinitialiser</button>
     </div>`;
   
   document.getElementById("app").innerHTML = html;
-  
-  document.querySelectorAll(".country-item").forEach(el => {
-    el.addEventListener("click", () => {
-      const code = el.dataset.code;
-      if (state.selectedCountries.includes(code)) {
-        state.selectedCountries = state.selectedCountries.filter(c => c !== code);
-        el.classList.remove("selected");
-      } else {
-        state.selectedCountries.push(code);
-        el.classList.add("selected");
-      }
-    });
+}
+
+function toggleCountry(code) {
+  if (state.selectedCountries.includes(code)) {
+    state.selectedCountries = state.selectedCountries.filter(c => c !== code);
+  } else {
+    state.selectedCountries.push(code);
+  }
+  renderSelector();
+}
+
+function toggleContinent(contKey) {
+  const el = document.querySelector(`.continent[data-continent="${contKey}"]`);
+  if (el) el.classList.toggle("collapsed");
+}
+
+function selectContinent(contKey) {
+  const cont = CONTINENTS[contKey];
+  cont.codes.forEach(code => {
+    if (state.countries.find(c => c.code === code) && !state.selectedCountries.includes(code)) {
+      state.selectedCountries.push(code);
+    }
   });
+  renderSelector();
+}
+
+function deselectContinent(contKey) {
+  const cont = CONTINENTS[contKey];
+  state.selectedCountries = state.selectedCountries.filter(c => !cont.codes.includes(c));
+  renderSelector();
 }
 
 function selectAll() {
   state.selectedCountries = state.countries.map(c => c.code);
-  document.querySelectorAll(".country-item").forEach(el => el.classList.add("selected"));
+  renderSelector();
 }
 
 function clearSelection() {
   state.selectedCountries = [];
-  document.querySelectorAll(".country-item").forEach(el => el.classList.remove("selected"));
+  renderSelector();
 }
 
 async function submitSelection() {
   if (!state.selectedCountries.length) return alert("Sélectionne au moins un pays");
   
-  document.getElementById("app").innerHTML = `<div class="state"><div class="spinner"></div>Chargement…</div>`;
+  document.getElementById("app").innerHTML = `<div class="state"><div class="spinner"></div>Chargement de ${state.selectedCountries.length} pays…</div>`;
   
   try {
     const res = await fetch(`/api/monde-live?countries=${state.selectedCountries.join(",")}`);
@@ -147,13 +263,18 @@ function renderResults() {
   let html = `
     <button class="cancel" onclick="goBack()" style="margin-bottom: 20px;">← Retour à la sélection</button>
     
+    <div class="summary">
+      <strong>${state.selectedCountries.length}</strong> pays | 
+      <strong>${erotica.length}</strong> films érotiques | 
+      <strong>${worldcup.length}</strong> matchs Coupe du Monde
+    </div>
+    
     <div class="controls">
-      <button class="filter-btn active" onclick="setFilter('all')">Tous</button>
-      <button class="filter-btn" onclick="setFilter('erotica')">🎬 Films Érotiques (${erotica.length})</button>
-      <button class="filter-btn" onclick="setFilter('worldcup')">⚽ Coupe du Monde (${worldcup.length})</button>
+      <button class="filter-btn ${state.filter === 'all' ? 'active' : ''}" onclick="setFilter('all')">Tous</button>
+      <button class="filter-btn ${state.filter === 'erotica' ? 'active' : ''}" onclick="setFilter('erotica')">🎬 Films Érotiques (${erotica.length})</button>
+      <button class="filter-btn ${state.filter === 'worldcup' ? 'active' : ''}" onclick="setFilter('worldcup')">⚽ Coupe du Monde (${worldcup.length})</button>
     </div>`;
   
-  // Films érotiques
   if (state.filter === "all" || state.filter === "erotica") {
     html += `<h2>🎬 Films Érotiques à l'Antenne</h2>
       <p class="subtitle"><strong>${erotica.length}</strong> diffusion(s) maintenant</p>`;
@@ -181,7 +302,6 @@ function renderResults() {
     }
   }
   
-  // Coupe du monde
   if (state.filter === "all" || state.filter === "worldcup") {
     html += `<h2>⚽ Coupe du Monde 2026 — EN DIRECT</h2>
       <p class="subtitle"><strong>${worldcup.length}</strong> match(s) maintenant</p>`;
@@ -210,14 +330,6 @@ function renderResults() {
   }
   
   document.getElementById("app").innerHTML = html;
-  
-  // Event listeners sur les boutons filtre
-  document.querySelectorAll(".filter-btn").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
-      e.target.classList.add("active");
-    });
-  });
 }
 
 function setFilter(type) {
