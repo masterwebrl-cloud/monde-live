@@ -60,7 +60,7 @@ h2 { font-size: 20px; margin: 20px 0 10px; }
 <header>
   <div class="wrap">
     <h1>Monde<span class="dot">.</span>Live</h1>
-    <div class="tag">🎬 Films E • ⚽ Coupe du Monde</div>
+    <div class="tag">🎬 Films Érotiques • ⚽ Coupe du Monde</div>
   </div>
 </header>
 
@@ -83,7 +83,7 @@ async function init() {
 function renderSelector() {
   let html = `
     <h2>🌍 Sélectionne les pays</h2>
-    <p class="subtitle">Choisis 1 ou plusieurs pays pour voir les films E et matchs en direct</p>
+    <p class="subtitle">Choisis 1 ou plusieurs pays pour voir les films érotiques et matchs en direct</p>
     <div class="country-grid" id="grid">`;
   state.countries.forEach(c => {
     html += `<div class="country-item" data-code="${c.code}">
@@ -149,13 +149,13 @@ function renderResults() {
     
     <div class="controls">
       <button class="filter-btn active" onclick="setFilter('all')">Tous</button>
-      <button class="filter-btn" onclick="setFilter('erotica')">🎬 Films E (${erotica.length})</button>
+      <button class="filter-btn" onclick="setFilter('erotica')">🎬 Films Érotiques (${erotica.length})</button>
       <button class="filter-btn" onclick="setFilter('worldcup')">⚽ Coupe du Monde (${worldcup.length})</button>
     </div>`;
   
-  // Films E
+  // Films érotiques
   if (state.filter === "all" || state.filter === "erotica") {
-    html += `<h2>🎬 Films E à l'Antenne</h2>
+    html += `<h2>🎬 Films Érotiques à l'Antenne</h2>
       <p class="subtitle"><strong>${erotica.length}</strong> diffusion(s) maintenant</p>`;
     
     if (!erotica.length) {
