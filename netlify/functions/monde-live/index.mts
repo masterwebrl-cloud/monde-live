@@ -2,7 +2,7 @@ import type { Config } from "@netlify/functions";
 import { gunzipSync } from "node:zlib";
 import { XMLParser } from "fast-xml-parser";
 
-// 80 pays monde complet
+// 80 pays
 const COUNTRIES = [
   "al", "ad", "at", "az", "by", "be", "ba", "bg", "hr", "cy", "cz", "dk", "ee", "fi", "fr", "de", "gr", "hu", "is", "ie", 
   "it", "xk", "lv", "li", "lt", "lu", "mt", "md", "mc", "me", "nl", "no", "pl", "pt", "ro", "ru", "sm", "rs", "sk", "si", "es", 
@@ -12,29 +12,30 @@ const COUNTRIES = [
 ];
 
 const COUNTRY_NAMES: Record<string, string> = {
-  al: "Albanie", ad: "Andorre", at: "Autriche", az: "Azerbaïdjan", by: "Biélorussie", be: "Belgique", ba: "Bosnie", bg: "Bulgarie",
-  hr: "Croatie", cy: "Chypre", cz: "Tchéquie", dk: "Danemark", ee: "Estonie", fi: "Finlande", fr: "France", de: "Allemagne",
-  gr: "Grèce", hu: "Hongrie", is: "Islande", ie: "Irlande", it: "Italie", xk: "Kosovo", lv: "Lettonie", li: "Liechtenstein",
-  lt: "Lituanie", lu: "Luxembourg", mt: "Malte", md: "Moldavie", mc: "Monaco", me: "Monténégro", nl: "Pays-Bas", no: "Norvège",
-  pl: "Pologne", pt: "Portugal", ro: "Roumanie", ru: "Russie", sm: "Saint-Marin", rs: "Serbie", sk: "Slovaquie", si: "Slovénie",
-  es: "Espagne", se: "Suède", ch: "Suisse", tr: "Turquie", ua: "Ukraine", gb: "Royaume-Uni", kz: "Kazakhstan", uz: "Ouzbékistan",
-  tm: "Turkménistan", tj: "Tadjikistan", kg: "Kirghizistan", ge: "Géorgie", am: "Arménie", af: "Afghanistan", bd: "Bangladesh",
-  bt: "Bhoutan", in: "Inde", lk: "Sri Lanka", mv: "Maldives", np: "Népal", pk: "Pakistan", br: "Brésil", cl: "Chili",
-  co: "Colombie", ec: "Équateur", gy: "Guyana", py: "Paraguay", pe: "Pérou", sr: "Suriname", uy: "Uruguay", ve: "Venezuela",
-  mx: "Mexique", bz: "Belize", cr: "Costa Rica", sv: "El Salvador", gt: "Guatemala", hn: "Honduras", ni: "Nicaragua", pa: "Panama",
-  jm: "Jamaïque", tt: "Trinité-et-Tobago", bs: "Bahamas", dm: "Dominique", pr: "Porto Rico", ag: "Antigua-et-Barbuda",
-  bb: "Barbade", gd: "Grenade", mu: "Maurice", sc: "Seychelles", au: "Australie", fj: "Fidji", nz: "Nouvelle-Zélande",
-  pf: "Polynésie française", sb: "Îles Salomon", vu: "Vanuatu"
+  fr: "France", gb: "Royaume-Uni", es: "Espagne", it: "Italie", de: "Allemagne", be: "Belgique", ch: "Suisse", pl: "Pologne", nl: "Pays-Bas",
+  at: "Autriche", cz: "Tchéquie", dk: "Danemark", fi: "Finlande", gr: "Grèce", hu: "Hongrie", is: "Islande", ie: "Irlande", pt: "Portugal",
+  ro: "Roumanie", se: "Suède", no: "Norvège", tr: "Turquie", ua: "Ukraine", ru: "Russie", by: "Biélorussie", kz: "Kazakhstan", br: "Brésil",
+  mx: "Mexique", ar: "Argentine", cl: "Chili", co: "Colombie", pe: "Pérou", ve: "Venezuela", in: "Inde", pk: "Pakistan", au: "Australie",
+  nz: "Nouvelle-Zélande", jp: "Japon", kr: "Corée du Sud", cn: "Chine", th: "Thaïlande", my: "Malaisie", sg: "Singapour", id: "Indonésie",
+  ph: "Philippines", vn: "Vietnam", eg: "Égypte", sa: "Arabie Saoudite", ae: "Émirats Arabes", il: "Israël", ng: "Nigéria", za: "Afrique du Sud",
+  ke: "Kenya", us: "États-Unis", ca: "Canada", al: "Albanie", ad: "Andorre", ba: "Bosnie", bg: "Bulgarie", hr: "Croatie", cy: "Chypre",
+  ee: "Estonie", lv: "Lettonie", li: "Liechtenstein", lt: "Lituanie", lu: "Luxembourg", mt: "Malte", md: "Moldavie", mc: "Monaco",
+  me: "Monténégro", sk: "Slovaquie", si: "Slovénie", sm: "Saint-Marin", rs: "Serbie", xk: "Kosovo", az: "Azerbaïdjan", am: "Arménie",
+  ge: "Géorgie", uz: "Ouzbékistan", tm: "Turkménistan", tj: "Tadjikistan", kg: "Kirghizistan", af: "Afghanistan", bd: "Bangladesh",
+  bt: "Bhoutan", lk: "Sri Lanka", mv: "Maldives", np: "Népal", ec: "Équateur", gy: "Guyana", py: "Paraguay", sr: "Suriname", uy: "Uruguay",
+  bz: "Belize", cr: "Costa Rica", sv: "El Salvador", gt: "Guatemala", hn: "Honduras", ni: "Nicaragua", pa: "Panama", jm: "Jamaïque",
+  tt: "Trinité-et-Tobago", bs: "Bahamas", dm: "Dominique", pr: "Porto Rico", ag: "Antigua-et-Barbuda", bb: "Barbade", gd: "Grenade",
+  mu: "Maurice", sc: "Seychelles", fj: "Fidji", pf: "Polynésie française", sb: "Îles Salomon", vu: "Vanuatu"
 };
 
 const COUNTRY_FLAGS: Record<string, string> = {
-  fr: "🇫🇷", de: "🇩🇪", it: "🇮🇹", es: "🇪🇸", gb: "🇬🇧", pl: "🇵🇱", nl: "🇳🇱", be: "🇧🇪", ch: "🇨🇭",
+  fr: "🇫🇷", gb: "🇬🇧", es: "🇪🇸", it: "🇮🇹", de: "🇩🇪", be: "🇧🇪", ch: "🇨🇭", pl: "🇵🇱", nl: "🇳🇱",
   at: "🇦🇹", cz: "🇨🇿", dk: "🇩🇰", fi: "🇫🇮", se: "🇸🇪", no: "🇳🇴", pt: "🇵🇹", gr: "🇬🇷", hu: "🇭🇺",
-  ro: "🇷🇴", bg: "🇧🇬", sk: "🇸🇰", si: "🇸🇮", hr: "🇭🇷", ba: "🇧🇦", rs: "🇷🇸", me: "🇲🇪", mk: "🇲🇰",
-  ua: "🇺🇦", ru: "🇷🇺", tr: "🇹🇷", by: "🇧🇾", kz: "🇰🇿", uz: "🇺🇿", br: "🇧🇷", mx: "🇲🇽", ar: "🇦🇷",
-  cl: "🇨🇱", co: "🇨🇴", pe: "🇵🇪", ve: "🇻🇪", in: "🇮🇳", pk: "🇵🇰", au: "🇦🇺", nz: "🇳🇿", jp: "🇯🇵",
-  kr: "🇰🇷", cn: "🇨🇳", th: "🇹🇭", my: "🇲🇾", sg: "🇸🇬", id: "🇮🇩", ph: "🇵🇭", vn: "🇻🇳", eg: "🇪🇬",
-  sa: "🇸🇦", ae: "🇦🇪", il: "🇮🇱", ng: "🇳🇬", za: "🇿🇦", ke: "🇰🇪", us: "🇺🇸", ca: "🇨🇦"
+  ro: "🇷🇴", bg: "🇧🇬", sk: "🇸🇰", si: "🇸🇮", hr: "🇭🇷", ba: "🇧🇦", rs: "🇷🇸", me: "🇲🇪", ua: "🇺🇦",
+  ru: "🇷🇺", tr: "🇹🇷", by: "🇧🇾", kz: "🇰🇿", br: "🇧🇷", mx: "🇲🇽", ar: "🇦🇷", cl: "🇨🇱", co: "🇨🇴",
+  pe: "🇵🇪", ve: "🇻🇪", in: "🇮🇳", pk: "🇵🇰", au: "🇦🇺", nz: "🇳🇿", jp: "🇯🇵", kr: "🇰🇷", cn: "🇨🇳",
+  th: "🇹🇭", my: "🇲🇾", sg: "🇸🇬", id: "🇮🇩", ph: "🇵🇭", vn: "🇻🇳", eg: "🇪🇬", sa: "🇸🇦", ae: "🇦🇪",
+  il: "🇮🇱", ng: "🇳🇬", za: "🇿🇦", ke: "🇰🇪", us: "🇺🇸", ca: "🇨🇦"
 };
 
 function xmltvToISO(t: string | undefined): string | null {
@@ -72,34 +73,20 @@ function decode(s: string): string {
 
 function isEroticProgram(title: string, desc: string, cats: string[]): boolean {
   const hay = `${title} ${desc} ${cats.join(" ")}`.toLowerCase();
-  const eroticKeywords = [
-    "erotic", "érotique", "erótico", "erotico", "erotisch", "erotyka", "erotik", "erotikfilm", 
-    "erotisches herzkino", "knisternde erotik", "erotismo", "películas eróticas", "cinema erotico", 
-    "sessualita", "film erotici", "sensuel", "sensual", "sensuale", "pornographique", "pornographic", 
-    "porn", "adult", "xxx", "adultos", "erotico", "erotici", "pornografici", "pornográficas", 
-    "eróticas", "erotiek", "volwassenen", "porno", "porna", "erotych", "erotyczny", "dorośli", 
-    "dla dorosłych", "heiss", "sexy", "adulti"
-  ];
+  const eroticKeywords = ["erotic", "érotique", "erótico", "erotico", "erotisch", "erotyka", "erotik", "erotikfilm", "erotisches herzkino", "knisternde erotik", "erotismo", "películas eróticas", "cinema erotico", "sessualita", "film erotici", "sensuel", "sensual", "sensuale", "pornographique", "pornographic", "porn", "adult", "xxx", "adultos", "erotici", "pornografici", "pornográficas", "eróticas", "erotiek", "volwassenen", "porno", "porna", "erotych", "erotyczny", "dorośli", "dla dorosłych", "heiss", "sexy", "adulti"];
   return eroticKeywords.some(kw => hay.includes(kw));
 }
 
 async function fetchEPG(countryCode: string) {
   try {
     const url = `https://iptv-epg.org/files/epg-${countryCode}.xml.gz`;
-    const res = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; MondeLive/1.0)" },
-    });
-    if (!res.ok) return null;
+    const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
+    if (!res.ok) return [];
     
     const buf = Buffer.from(await res.arrayBuffer());
     const xml = gunzipSync(buf).toString("utf-8");
     
-    const parser = new XMLParser({
-      ignoreAttributes: false,
-      attributeNamePrefix: "@_",
-      trimValues: true,
-      processEntities: false,
-    });
+    const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@_", trimValues: true, processEntities: false });
     const doc = parser.parse(xml);
     const tv = doc.tv ?? {};
     
@@ -118,50 +105,18 @@ async function fetchEPG(countryCode: string) {
       const startMs = new Date(startTime).getTime();
       const stopMs = new Date(stopTime).getTime();
       
-      // Filtre: "à l'antenne maintenant"
       if (!(startMs <= now && now < stopMs)) continue;
       
       const title = decode(textOf(asArray<any>(p.title)[0])) || "Sans titre";
       const desc = decode(textOf(asArray<any>(p.desc)[0])) || "";
       const cats = asArray<any>(p.category).map(textOf).map(decode).filter(Boolean);
       
-      // Filtre: films érotiques uniquement
       if (!isEroticProgram(title, desc, cats)) continue;
       
-      programmes.push({
-        channel: p["@_channel"],
-        title,
-        desc,
-        start: startTime,
-        stop: stopTime,
-      });
+      programmes.push({ channel: p["@_channel"], title, desc, start: startTime, stop: stopTime });
     }
     
     return programmes;
-  } catch (e) {
-    return null;
-  }
-}
-
-async function fetchWorldCupMatches() {
-  try {
-    const url = "https://api.football-data.org/v4/competitions/WC/matches?status=LIVE";
-    const token = Deno.env.get("FOOTBALL_DATA_TOKEN") || "";
-    
-    const res = await fetch(url, {
-      headers: { "X-Auth-Token": token },
-    });
-    if (!res.ok) return [];
-    
-    const data = await res.json() as any;
-    return (data.matches || []).map((m: any) => ({
-      homeTeam: m.homeTeam?.name || "—",
-      awayTeam: m.awayTeam?.name || "—",
-      status: m.status,
-      utcDate: m.utcDate,
-      score: `${m.score?.fullTime?.home || "—"} - ${m.score?.fullTime?.away || "—"}`,
-      type: "match"
-    }));
   } catch (e) {
     return [];
   }
@@ -172,7 +127,7 @@ export default async (req: Request) => {
     const url = new URL(req.url);
     const countriesParam = url.searchParams.get("countries") || "";
     
-    // Si pas de pays spécifiés, retourne juste la liste des pays disponibles
+    // Retourne liste de pays si pas de sélection
     if (!countriesParam) {
       return Response.json({
         countries: COUNTRIES.map(cc => ({
@@ -180,22 +135,19 @@ export default async (req: Request) => {
           name: COUNTRY_NAMES[cc] || cc.toUpperCase(),
           flag: COUNTRY_FLAGS[cc] || "🌍"
         }))
-      }, {
-        headers: { "Cache-Control": "public, max-age=3600" }
-      });
+      }, { headers: { "Cache-Control": "public, max-age=3600" } });
     }
     
     // Parse les pays demandés
     const selectedCountries = countriesParam.split(",").filter(c => COUNTRIES.includes(c));
     if (selectedCountries.length === 0) {
-      return Response.json({ error: "Aucun pays valide" }, { status: 400 });
+      return Response.json({ error: "Aucun pays valide", programmes: [], worldcupMatches: [] }, { status: 200 });
     }
     
-    // Charge uniquement les pays sélectionnés
+    // Charge les pays sélectionnés
     const epgPromises = selectedCountries.map(cc => fetchEPG(cc));
     const epgResults = await Promise.all(epgPromises);
     
-    // Agrège les résultats
     const allProgrammes: any[] = [];
     selectedCountries.forEach((cc, idx) => {
       const progs = epgResults[idx] || [];
@@ -209,18 +161,13 @@ export default async (req: Request) => {
       });
     });
     
-    // Ajoute les matchs de Coupe du Monde
-    const wcMatches = await fetchWorldCupMatches();
-    
     return Response.json({
       generatedAt: new Date().toISOString(),
       programmes: allProgrammes.sort((a, b) => a.start.localeCompare(b.start)),
-      worldcupMatches: wcMatches,
-    }, {
-      headers: { "Cache-Control": "public, max-age=300, s-maxage=3600" }
-    });
+      worldcupMatches: []
+    }, { headers: { "Cache-Control": "public, max-age=300, s-maxage=3600" } });
   } catch (e: any) {
-    return Response.json({ error: e?.message || "Erreur serveur" }, { status: 502 });
+    return Response.json({ error: e?.message || "Erreur serveur", programmes: [], worldcupMatches: [] }, { status: 200 });
   }
 };
 
