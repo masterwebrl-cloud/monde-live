@@ -77,11 +77,16 @@ function isEroticProgram(title: string, desc: string, cats: string[]): boolean {
   return eroticKeywords.some(kw => hay.includes(kw));
 }
 
+function isWorldCupMatch(title: string, desc: string, cats: string[]): boolean {
+  const hay = `${title} ${desc} ${cats.join(" ")}`.toLowerCase();
+  return hay.includes("coupe du monde") || hay.includes("world cup") || hay.includes("fifa") || hay.includes("match") || hay.includes("football");
+}
+
 async function fetchEPG(countryCode: string) {
   try {
     const url = `https://iptv-epg.org/files/epg-${countryCode}.xml.gz`;
     const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
-    if (!res.ok) return [];
+    if (!res.ok) return { erotica: [], worldcup: [] };
     
     const buf = Buffer.from(await res.arrayBuffer());
     const xml = gunzipSync(buf).toString("utf-8");
@@ -91,8 +96,20 @@ async function fetchEPG(countryCode: string) {
     const tv = doc.tv ?? {};
     
     const now = Date.now();
-    const programmes: any[] = [];
+    const channels: Record<string, string> = {};
     
+    // Parse channels
+    for (const ch of asArray<any>(tv.channel)) {
+      const id = ch["@_id"];
+      if (!id) continue;
+      const names = asArray<any>(ch["display-name"]).map(textOf).map(decode).filter(Boolean);
+      channels[id] = names[0] || id;
+    }
+    
+    const erotica: any[] = [];
+    const worldcup: any[] = [];
+    
+    // Parse programmes
     for (const p of asArray<any>(tv.programme)) {
       const start = p["@_start"];
       const stop = p["@_stop"];
@@ -107,18 +124,25 @@ async function fetchEPG(countryCode: string) {
       
       if (!(startMs <= now && now < stopMs)) continue;
       
+      const channelId = p["@_channel"];
+      const channelName = channels[channelId] || channelId;
       const title = decode(textOf(asArray<any>(p.title)[0])) || "Sans titre";
       const desc = decode(textOf(asArray<any>(p.desc)[0])) || "";
       const cats = asArray<any>(p.category).map(textOf).map(decode).filter(Boolean);
       
-      if (!isEroticProgram(title, desc, cats)) continue;
+      const prog = { channel: channelName, title, desc, start: startTime, stop: stopTime };
       
-      programmes.push({ channel: p["@_channel"], title, desc, start: startTime, stop: stopTime });
+      if (isEroticProgram(title, desc, cats)) {
+        erotica.push(prog);
+      }
+      if (isWorldCupMatch(title, desc, cats)) {
+        worldcup.push(prog);
+      }
     }
     
-    return programmes;
+    return { erotica, worldcup };
   } catch (e) {
-    return [];
+    return { erotica: [], worldcup: [] };
   }
 }
 
@@ -141,18 +165,30 @@ export default async (req: Request) => {
     // Parse les pays demandés
     const selectedCountries = countriesParam.split(",").filter(c => COUNTRIES.includes(c));
     if (selectedCountries.length === 0) {
-      return Response.json({ error: "Aucun pays valide", programmes: [], worldcupMatches: [] }, { status: 200 });
+      return Response.json({ error: "Aucun pays valide", erotica: [], worldcup: [] }, { status: 200 });
     }
     
     // Charge les pays sélectionnés
     const epgPromises = selectedCountries.map(cc => fetchEPG(cc));
     const epgResults = await Promise.all(epgPromises);
     
-    const allProgrammes: any[] = [];
+    const allErotica: any[] = [];
+    const allWorldcup: any[] = [];
+    
     selectedCountries.forEach((cc, idx) => {
-      const progs = epgResults[idx] || [];
-      progs.forEach(p => {
-        allProgrammes.push({
+      const result = epgResults[idx] || { erotica: [], worldcup: [] };
+      
+      result.erotica.forEach(p => {
+        allErotica.push({
+          ...p,
+          country: cc,
+          countryName: COUNTRY_NAMES[cc] || cc.toUpperCase(),
+          flag: COUNTRY_FLAGS[cc] || "🌍"
+        });
+      });
+      
+      result.worldcup.forEach(p => {
+        allWorldcup.push({
           ...p,
           country: cc,
           countryName: COUNTRY_NAMES[cc] || cc.toUpperCase(),
@@ -163,11 +199,11 @@ export default async (req: Request) => {
     
     return Response.json({
       generatedAt: new Date().toISOString(),
-      programmes: allProgrammes.sort((a, b) => a.start.localeCompare(b.start)),
-      worldcupMatches: []
+      erotica: allErotica.sort((a, b) => a.start.localeCompare(b.start)),
+      worldcup: allWorldcup.sort((a, b) => a.start.localeCompare(b.start))
     }, { headers: { "Cache-Control": "public, max-age=300, s-maxage=3600" } });
   } catch (e: any) {
-    return Response.json({ error: e?.message || "Erreur serveur", programmes: [], worldcupMatches: [] }, { status: 200 });
+    return Response.json({ error: e?.message || "Erreur serveur", erotica: [], worldcup: [] }, { status: 200 });
   }
 };
 
