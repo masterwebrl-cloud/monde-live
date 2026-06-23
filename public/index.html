@@ -14,6 +14,7 @@
   --muted: #9aa3d4;
   --gold: #e8b647;
   --live: #ff4d5e;
+  --match: #4fb286;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: var(--ink); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, sans-serif; min-height: 100vh; }
@@ -32,31 +33,41 @@ h1 { font-size: 48px; font-weight: 800; }
 .actions button { border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; }
 .actions .submit { background: var(--gold); color: var(--ink); }
 .actions .cancel { background: var(--panel); color: var(--text); border: 1px solid var(--line); }
-.items { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
-.item { background: var(--panel); border: 1px solid var(--live); border-radius: 9px; padding: 14px; }
-.item-flag { font-size: 24px; }
+.controls { display: flex; gap: 12px; margin: 20px 0; flex-wrap: wrap; }
+.controls button { background: var(--panel); border: 1px solid var(--line); color: var(--text); padding: 10px 16px; border-radius: 8px; cursor: pointer; }
+.controls button.active { background: var(--gold); color: var(--ink); font-weight: 600; }
+.items { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.item { background: var(--panel); border: 1px solid var(--line); border-radius: 9px; padding: 14px; transition: all 0.12s; }
+.item.erotica { border-color: #ff69b4; }
+.item.worldcup { border-color: var(--match); border-left: 4px solid var(--match); }
+.item-header { display: flex; gap: 8px; margin-bottom: 8px; align-items: start; }
+.item-flag { font-size: 24px; flex-shrink: 0; }
+.item-info { flex: 1; }
 .item-country { font-size: 11px; color: var(--muted); text-transform: uppercase; }
-.item-title { font-weight: 600; margin-top: 4px; }
+.item-title { font-weight: 600; margin-top: 4px; font-size: 15px; }
+.item-channel { font-size: 12px; color: var(--gold); margin-top: 4px; font-weight: 600; }
 .item-time { font-size: 12px; color: var(--muted); margin-top: 4px; }
 .item-badge { display: inline-block; background: var(--live); color: #fff; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px; margin-top: 6px; }
 .state { text-align: center; padding: 60px 20px; color: var(--muted); }
 .spinner { width: 32px; height: 32px; border: 3px solid var(--line); border-top-color: var(--gold); border-radius: 50%; margin: 0 auto 16px; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .hidden { display: none; }
+h2 { font-size: 20px; margin: 20px 0 10px; }
+.subtitle { color: var(--muted); font-size: 12px; margin-bottom: 20px; }
 </style>
 </head>
 <body>
 <header>
   <div class="wrap">
     <h1>Monde<span class="dot">.</span>Live</h1>
-    <div class="tag">🎬 Films E</div>
+    <div class="tag">🎬 Films Érotiques • ⚽ Coupe du Monde</div>
   </div>
 </header>
 
 <div class="wrap" id="app"></div>
 
 <script>
-const state = { countries: [], selectedCountries: [], data: null, stage: "select" };
+const state = { countries: [], selectedCountries: [], data: null, stage: "select", filter: "all" };
 
 async function init() {
   try {
@@ -71,7 +82,8 @@ async function init() {
 
 function renderSelector() {
   let html = `
-    <h2 style="margin-bottom: 20px;">Sélectionne les pays</h2>
+    <h2>🌍 Sélectionne les pays</h2>
+    <p class="subtitle">Choisis 1 ou plusieurs pays pour voir les films érotiques et matchs en direct</p>
     <div class="country-grid" id="grid">`;
   state.countries.forEach(c => {
     html += `<div class="country-item" data-code="${c.code}">
@@ -81,8 +93,8 @@ function renderSelector() {
   });
   html += `</div>
     <div class="actions">
-      <button class="submit" onclick="submitSelection()">Charger</button>
-      <button class="cancel" onclick="selectAll()">Tous</button>
+      <button class="submit" onclick="submitSelection()">Charger les données</button>
+      <button class="cancel" onclick="selectAll()">Tous les pays</button>
       <button class="cancel" onclick="clearSelection()">Réinitialiser</button>
     </div>`;
   
@@ -113,7 +125,7 @@ function clearSelection() {
 }
 
 async function submitSelection() {
-  if (!state.selectedCountries.length) return alert("Sélectionne au least un pays");
+  if (!state.selectedCountries.length) return alert("Sélectionne au moins un pays");
   
   document.getElementById("app").innerHTML = `<div class="state"><div class="spinner"></div>Chargement…</div>`;
   
@@ -129,38 +141,93 @@ async function submitSelection() {
 }
 
 function renderResults() {
-  const progs = state.data?.programmes || [];
-  let html = `
-    <button class="cancel" onclick="goBack()" style="margin-bottom: 20px;">← Retour</button>
-    <h2 style="margin-bottom: 10px;">🎬 Films E à l'Antenne</h2>
-    <p style="color: var(--muted); margin-bottom: 20px;"><strong>${progs.length}</strong> diffusions</p>`;
+  const erotica = state.data?.erotica || [];
+  const worldcup = state.data?.worldcup || [];
   
-  if (!progs.length) {
-    html += `<div class="state">Aucun film érotique en ce moment</div>`;
-  } else {
-    html += `<div class="items">`;
-    progs.forEach(p => {
-      const time = new Date(p.start).toLocaleTimeString("fr-FR", {hour: "2-digit", minute: "2-digit"});
-      html += `<div class="item">
-        <div style="display: flex; gap: 8px;">
-          <span class="item-flag">${p.flag}</span>
-          <div>
-            <div class="item-country">${p.countryName}</div>
-            <div class="item-title">${p.title}</div>
+  let html = `
+    <button class="cancel" onclick="goBack()" style="margin-bottom: 20px;">← Retour à la sélection</button>
+    
+    <div class="controls">
+      <button class="filter-btn active" onclick="setFilter('all')">Tous</button>
+      <button class="filter-btn" onclick="setFilter('erotica')">🎬 Films Érotiques (${erotica.length})</button>
+      <button class="filter-btn" onclick="setFilter('worldcup')">⚽ Coupe du Monde (${worldcup.length})</button>
+    </div>`;
+  
+  // Films érotiques
+  if (state.filter === "all" || state.filter === "erotica") {
+    html += `<h2>🎬 Films Érotiques à l'Antenne</h2>
+      <p class="subtitle"><strong>${erotica.length}</strong> diffusion(s) maintenant</p>`;
+    
+    if (!erotica.length) {
+      html += `<div class="state">Aucun film érotique en ce moment</div>`;
+    } else {
+      html += `<div class="items">`;
+      erotica.forEach(p => {
+        const time = new Date(p.start).toLocaleTimeString("fr-FR", {hour: "2-digit", minute: "2-digit"});
+        html += `<div class="item erotica">
+          <div class="item-header">
+            <span class="item-flag">${p.flag}</span>
+            <div class="item-info">
+              <div class="item-country">${p.countryName}</div>
+              <div class="item-title">${p.title}</div>
+              <div class="item-channel">📺 ${p.channel}</div>
+              <div class="item-time">${time}</div>
+              <span class="item-badge">EN DIRECT</span>
+            </div>
           </div>
-        </div>
-        <div class="item-time">${time}</div>
-        <span class="item-badge">EN DIRECT</span>
-      </div>`;
-    });
-    html += `</div>`;
+        </div>`;
+      });
+      html += `</div>`;
+    }
+  }
+  
+  // Coupe du monde
+  if (state.filter === "all" || state.filter === "worldcup") {
+    html += `<h2>⚽ Coupe du Monde 2026 — EN DIRECT</h2>
+      <p class="subtitle"><strong>${worldcup.length}</strong> match(s) maintenant</p>`;
+    
+    if (!worldcup.length) {
+      html += `<div class="state">Aucun match en ce moment</div>`;
+    } else {
+      html += `<div class="items">`;
+      worldcup.forEach(p => {
+        const time = new Date(p.start).toLocaleTimeString("fr-FR", {hour: "2-digit", minute: "2-digit"});
+        html += `<div class="item worldcup">
+          <div class="item-header">
+            <span class="item-flag">${p.flag}</span>
+            <div class="item-info">
+              <div class="item-country">${p.countryName}</div>
+              <div class="item-title">${p.title}</div>
+              <div class="item-channel">📺 ${p.channel}</div>
+              <div class="item-time">${time}</div>
+              <span class="item-badge">EN DIRECT</span>
+            </div>
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
   }
   
   document.getElementById("app").innerHTML = html;
+  
+  // Event listeners sur les boutons filtre
+  document.querySelectorAll(".filter-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+      e.target.classList.add("active");
+    });
+  });
+}
+
+function setFilter(type) {
+  state.filter = type;
+  renderResults();
 }
 
 function goBack() {
   state.stage = "select";
+  state.filter = "all";
   renderSelector();
 }
 
