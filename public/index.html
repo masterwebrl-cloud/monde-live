@@ -72,6 +72,62 @@
   .section { margin-bottom: 32px; }
   .section-title { font-size: 18px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
 
+  /* Sélecteur de pays */
+  .country-selector { padding: 40px 20px; text-align: center; }
+  .country-selector h2 { margin-bottom: 12px; color: var(--gold); }
+  .country-selector .info { color: var(--muted); margin-bottom: 20px; font-size: 14px; }
+  
+  .country-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+    margin: 28px 0;
+    max-height: 500px;
+    overflow-y: auto;
+    padding: 20px;
+    background: var(--panel);
+    border-radius: 9px;
+    border: 1px solid var(--line);
+  }
+  .country-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px;
+    border-radius: 8px;
+    background: var(--ink);
+    border: 1px solid var(--line);
+    cursor: pointer;
+    transition: all 0.12s;
+    user-select: none;
+  }
+  .country-item:hover { border-color: var(--gold); }
+  .country-item.selected { background: var(--gold); color: var(--ink); border-color: var(--gold); font-weight: 600; }
+  .country-flag { font-size: 32px; }
+  .country-name { font-size: 11px; text-align: center; word-break: break-word; }
+  
+  .country-actions { display: flex; gap: 12px; margin: 20px 0; justify-content: center; flex-wrap: wrap; }
+  .country-actions button {
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .country-actions .submit {
+    background: var(--gold);
+    color: var(--ink);
+  }
+  .country-actions .submit:hover { opacity: 0.9; }
+  .country-actions .cancel {
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--line);
+  }
+  .country-actions .cancel:hover { border-color: var(--gold); }
+
   .items { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
   .item {
     background: var(--panel);
@@ -102,6 +158,7 @@
   @media (max-width: 720px) {
     .items { grid-template-columns: 1fr; }
     .controls { flex-direction: column; }
+    .country-grid { max-height: 400px; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
   }
 </style>
 </head>
@@ -116,75 +173,152 @@
 </header>
 
 <div class="wrap">
-  <div class="controls">
-    <button class="filter-btn active" data-filter="all">Tous</button>
-    <button class="filter-btn" data-filter="erotica">🎬 Films E</button>
-    <button class="filter-btn" data-filter="worldcup">⚽ Coupe du Monde</button>
-  </div>
-
-  <div class="search-bar">
-    <input type="search" id="search" placeholder="Rechercher programme, pays, équipe..." autocomplete="off" />
-  </div>
-
-  <div class="meta" id="meta"></div>
-
   <div id="content">
-    <div class="state"><div class="spinner"></div>Chargement mondial…</div>
+    <div class="state"><div class="spinner"></div>Chargement des pays…</div>
   </div>
-</body>
+</div>
 
 <script>
 const state = {
   data: null,
+  selectedCountries: [],
   filter: "all",
   search: "",
+  stage: "country-select" // country-select ou results
 };
 
-const filters = document.querySelectorAll(".filter-btn");
-filters.forEach(btn => {
-  btn.addEventListener("click", (e) => {
-    filters.forEach(b => b.classList.remove("active"));
-    e.target.classList.add("active");
-    state.filter = e.target.dataset.filter;
-    render();
-  });
-});
-
-const searchInput = document.getElementById("search");
-searchInput.addEventListener("input", (e) => {
-  state.search = e.target.value.toLowerCase();
-  setTimeout(render, 120);
-});
-
-async function load() {
+async function loadCountries() {
   try {
     const res = await fetch("/api/monde-live");
     if (!res.ok) throw new Error(`Erreur ${res.status}`);
-    state.data = await res.json();
-    render();
+    const data = await res.json();
+    state.countries = data.countries || [];
+    renderCountrySelector();
   } catch (e) {
     document.getElementById("content").innerHTML =
-      `<div class="state">Impossible de charger les données.<br><button onclick="location.reload()">Réessayer</button></div>`;
+      `<div class="state">Impossible de charger les pays.<br><button onclick="location.reload()">Réessayer</button></div>`;
   }
 }
 
-function render() {
-  if (!state.data) return;
+function renderCountrySelector() {
+  let html = `
+    <div class="country-selector">
+      <h2>🌍 Sélectionne les pays</h2>
+      <div class="info">Choisis 1 ou plusieurs pays pour filtrer films E et matchs</div>
+      <div class="country-grid" id="countryGrid">`;
+  
+  state.countries.forEach(c => {
+    html += `<div class="country-item" data-code="${c.code}">
+      <span class="country-flag">${c.flag}</span>
+      <span class="country-name">${c.name}</span>
+    </div>`;
+  });
+  
+  html += `</div>
+    <div class="country-actions">
+      <button class="submit" id="submitBtn" onclick="submitCountries()" disabled>Charger les données</button>
+      <button class="cancel" onclick="selectAll()">Tous les pays</button>
+      <button class="cancel" onclick="clearSelection()">Réinitialiser</button>
+    </div>
+  </div>`;
+  
+  document.getElementById("content").innerHTML = html;
+  
+  // Événements click sur les pays
+  document.querySelectorAll(".country-item").forEach(el => {
+    el.addEventListener("click", (e) => {
+      const code = e.currentTarget.dataset.code;
+      if (state.selectedCountries.includes(code)) {
+        state.selectedCountries = state.selectedCountries.filter(c => c !== code);
+      } else {
+        state.selectedCountries.push(code);
+      }
+      renderCountrySelector();
+    });
+  });
+}
 
+function selectAll() {
+  state.selectedCountries = state.countries.map(c => c.code);
+  renderCountrySelector();
+}
+
+function clearSelection() {
+  state.selectedCountries = [];
+  renderCountrySelector();
+}
+
+async function submitCountries() {
+  if (state.selectedCountries.length === 0) return;
+  
+  document.getElementById("content").innerHTML =
+    `<div class="state"><div class="spinner"></div>Chargement des données…</div>`;
+  
+  try {
+    const res = await fetch(`/api/monde-live?countries=${state.selectedCountries.join(",")}`);
+    if (!res.ok) throw new Error(`Erreur ${res.status}`);
+    state.data = await res.json();
+    state.stage = "results";
+    renderResults();
+  } catch (e) {
+    document.getElementById("content").innerHTML =
+      `<div class="state">Erreur chargement.<br><button onclick="loadCountries()">Retour</button></div>`;
+  }
+}
+
+function renderResults() {
+  let html = `
+    <div class="controls">
+      <button class="filter-btn active" data-filter="all">Tous</button>
+      <button class="filter-btn" data-filter="erotica">🎬 Films E</button>
+      <button class="filter-btn" data-filter="worldcup">⚽ Coupe du Monde</button>
+      <button class="filter-btn cancel" onclick="goBackCountry()">← Changer pays</button>
+    </div>
+
+    <div class="search-bar">
+      <input type="search" id="search" placeholder="Rechercher programme, pays, équipe..." autocomplete="off" />
+    </div>
+
+    <div class="meta" id="meta"></div>
+    <div id="items-container"></div>`;
+  
+  document.getElementById("content").innerHTML = html;
+  
+  // Event listeners
+  document.querySelectorAll(".filter-btn").forEach(btn => {
+    if (btn.dataset.filter) {
+      btn.addEventListener("click", (e) => {
+        document.querySelectorAll(".filter-btn").forEach(b => {
+          if (b.dataset.filter) b.classList.remove("active");
+        });
+        e.target.classList.add("active");
+        state.filter = e.target.dataset.filter;
+        renderItems();
+      });
+    }
+  });
+  
+  const searchInput = document.getElementById("search");
+  searchInput.addEventListener("input", (e) => {
+    state.search = e.target.value.toLowerCase();
+    setTimeout(renderItems, 120);
+  });
+  
+  renderItems();
+}
+
+function renderItems() {
   const q = state.search;
   let programmes = state.data.programmes || [];
   let matches = state.data.worldcupMatches || [];
 
-  // Filtre programmes
   if (state.filter === "erotica") {
     programmes = programmes.filter(p => 
       (p.title.toLowerCase().includes(q) || 
-       p.countryName.toLowerCase().includes(q) || 
-       p.channel.toLowerCase().includes(q))
+       p.countryName.toLowerCase().includes(q))
     );
   }
 
-  // Filtre matchs
   if (state.filter === "worldcup") {
     matches = matches.filter(m => 
       (m.homeTeam.toLowerCase().includes(q) || 
@@ -192,7 +326,6 @@ function render() {
     );
   }
 
-  // Affichage
   let html = "";
 
   if (state.filter !== "worldcup") {
@@ -200,10 +333,10 @@ function render() {
     const displayed = programmes.length;
     html += `<div class="section">
       <div class="section-title">🎬 Films E à l'Antenne</div>
-      <div class="meta"><strong>${displayed}</strong> diffusions actuelles sur <strong>${total}</strong> monde</div>`;
+      <div class="meta"><strong>${displayed}</strong> diffusions actuelles sur <strong>${total}</strong></div>`;
     
     if (programmes.length === 0) {
-      html += `<div class="state">Aucun film érotique en direct maintenant.</div>`;
+      html += `<div class="state">Aucun film érotique en direct.</div>`;
     } else {
       html += `<div class="items">`;
       programmes.forEach(p => {
@@ -226,10 +359,10 @@ function render() {
 
   if (state.filter !== "erotica") {
     html += `<div class="section">
-      <div class="section-title">⚽ Coupe du Monde 2026 — LIVE</div>`;
+      <div class="section-title">⚽ Coupe du Monde 2026</div>`;
     
     if (matches.length === 0) {
-      html += `<div class="state">Aucun match en direct maintenant.</div>`;
+      html += `<div class="state">Aucun match en direct.</div>`;
     } else {
       html += `<div class="items">`;
       matches.forEach(m => {
@@ -247,12 +380,18 @@ function render() {
     html += `</div>`;
   }
 
-  document.getElementById("content").innerHTML = html;
+  document.getElementById("items-container").innerHTML = html;
+}
+
+function goBackCountry() {
+  state.stage = "country-select";
+  state.data = null;
+  renderCountrySelector();
 }
 
 function esc(s) { return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
-load();
-setInterval(load, 300000); // Mise à jour toutes les 5 min
+loadCountries();
 </script>
+</body>
 </html>
