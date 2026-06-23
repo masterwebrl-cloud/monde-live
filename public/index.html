@@ -291,7 +291,7 @@ function renderResults() {
             <div class="item-info">
               <div class="item-country">${p.countryName}</div>
               <div class="item-title">${p.title}</div>
-              <div class="item-channel">📺 ${p.channel}</div>
+              <div class="item-channel">${p.channelIcon || '📺'} ${p.channel}</div>
               <div class="item-time">${time}</div>
               <span class="item-badge">EN DIRECT</span>
             </div>
@@ -318,7 +318,7 @@ function renderResults() {
             <div class="item-info">
               <div class="item-country">${p.countryName}</div>
               <div class="item-title">${p.title}</div>
-              <div class="item-channel">📺 ${p.channel}</div>
+              <div class="item-channel">${p.channelIcon || '📺'} ${p.channel}</div>
               <div class="item-time">${time}</div>
               <span class="item-badge">EN DIRECT</span>
             </div>
