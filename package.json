@@ -1,0 +1,17 @@
+{
+  "name": "monde-live",
+  "version": "1.0.0",
+  "description": "Monde Live - Netlify project",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo 'Build script'",
+    "dev": "netlify dev",
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@netlify/functions": "^2.0.0"
+  }
+}
