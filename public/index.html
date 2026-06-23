@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monde Live</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 600px;
+      width: 100%;
+      padding: 40px;
+      text-align: center;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 2.5em;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 1.1em;
+    }
+
+    .content {
+      margin: 30px 0;
+    }
+
+    .data-section {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: left;
+    }
+
+    .data-section h2 {
+      color: #667eea;
+      font-size: 1.2em;
+      margin-bottom: 15px;
+    }
+
+    pre {
+      background: #2d2d2d;
+      color: #f8f8f2;
+      padding: 15px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 0.9em;
+      line-height: 1.5;
+    }
+
+    .loading {
+      display: inline-block;
+      color: #667eea;
+      font-weight: bold;
+    }
+
+    .error {
+      background: #fee;
+      color: #c33;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 10px 0;
+      border-left: 4px solid #c33;
+    }
+
+    .success {
+      background: #efe;
+      color: #3c3;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 10px 0;
+      border-left: 4px solid #3c3;
+    }
+
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 6px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      margin-top: 20px;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .footer {
+      color: #999;
+      font-size: 0.9em;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🌍 Monde Live</h1>
+    <p class="subtitle">Real-time global data streaming</p>
+
+    <div class="content">
+      <button onclick="fetchData()">Fetch Data</button>
+
+      <div id="status" style="margin-top: 20px; display: none;"></div>
+
+      <div id="data-display" class="data-section" style="display: none;">
+        <h2>Response Data</h2>
+        <pre id="response-json"></pre>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>Powered by Netlify Functions</p>
+    </div>
+  </div>
+
+  <script>
+    async function fetchData() {
+      const statusDiv = document.getElementById('status');
+      const dataDisplay = document.getElementById('data-display');
+      const responseJson = document.getElementById('response-json');
+
+      // Show loading state
+      statusDiv.style.display = 'block';
+      statusDiv.innerHTML = '<div class="loading">⏳ Fetching data...</div>';
+      dataDisplay.style.display = 'none';
+
+      try {
+        const response = await fetch('/.netlify/functions/monde-live');
+        const data = await response.json();
+
+        if (response.ok) {
+          statusDiv.innerHTML = '<div class="success">✓ Data fetched successfully</div>';
+          responseJson.textContent = JSON.stringify(data, null, 2);
+          dataDisplay.style.display = 'block';
+        } else {
+          statusDiv.innerHTML = `<div class="error">✗ Error: ${data.message || 'Unknown error'}</div>`;
+        }
+      } catch (error) {
+        statusDiv.innerHTML = `<div class="error">✗ Network error: ${error.message}</div>`;
+      }
+    }
+  </script>
+</body>
+</html>
