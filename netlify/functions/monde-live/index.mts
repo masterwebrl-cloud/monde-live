@@ -2,7 +2,6 @@ import type { Config } from "@netlify/functions";
 import { gunzipSync } from "node:zlib";
 import { XMLParser } from "fast-xml-parser";
 
-// 80 pays
 const COUNTRIES = [
   "al", "ad", "at", "az", "by", "be", "ba", "bg", "hr", "cy", "cz", "dk", "ee", "fi", "fr", "de", "gr", "hu", "is", "ie", 
   "it", "xk", "lv", "li", "lt", "lu", "mt", "md", "mc", "me", "nl", "no", "pl", "pt", "ro", "ru", "sm", "rs", "sk", "si", "es", 
@@ -64,22 +63,189 @@ function decode(s: string): string {
   return s
     .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCodePoint(parseInt(h, 16)))
     .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(parseInt(d, 10)))
-    .replace(/&apos;/g, "'")
-    .replace(/&quot;/g, '"')
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&amp;/g, "&");
+    .replace(/&apos;/g, "'").replace(/&quot;/g, '"')
+    .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
 }
 
+// ─── EROTIC CATEGORIES (toutes langues) ───
+const EROTIC_CATEGORIES = [
+  // Anglais
+  "erotic", "erotica", "porn", "pornography", "adult", "adult film", "adult movie", "xxx", "x-rated",
+  // Français
+  "érotique", "érotisme", "pornographique", "porno", "adulte", "film adulte", "film érotique",
+  // Espagnol
+  "erótico", "erotismo", "pornográfico", "porno", "adultos", "películas eróticas", "pornográficas", "eróticas",
+  // Italien
+  "erotico", "erotici", "erotismo", "pornografico", "pornografici", "adulti", "cinema erotico", "film erotici", "sessualita",
+  // Allemand (Allemagne, Autriche, Suisse, Luxembourg)
+  "erotisch", "erotik", "erotikfilm", "erotisches herzkino", "knisternde erotik", "porno", "erwachsene", "fsk 18",
+  // Néerlandais (Pays-Bas, Belgique flamande)
+  "erotiek", "erotisch", "volwassenen", "porno", "porna", "voor volwassenen",
+  // Polonais
+  "erotyka", "erotyczny", "porno", "dla dorosłych", "dorośli", "erotyczne",
+  // Portugais (Portugal, Brésil)
+  "erótico", "pornografia", "pornográfico", "adultos", "filme erótico",
+  // Russe
+  "эротика", "эротический", "порно", "для взрослых", "взрослые",
+  // Ukrainien
+  "еротика", "еротичний", "порно", "для дорослих",
+  // Tchèque
+  "erotický", "erotický film", "pornografie", "dospělí",
+  // Slovaque
+  "erotický", "erotika", "pornografia", "dospelí",
+  // Hongrois
+  "erotikus", "erotika", "pornográfia", "felnőtt",
+  // Roumain
+  "erotic", "erotism", "pornografie", "adulți",
+  // Bulgare
+  "еротичен", "еротика", "порно", "за възрастни",
+  // Serbe/Croate/Bosnien
+  "erotski", "erotika", "porno", "za odrasle", "odrasli",
+  // Slovène
+  "erotični", "erotika", "porno", "za odrasle",
+  // Suédois
+  "erotik", "erotisk", "porr", "vuxen", "för vuxna",
+  // Norvégien
+  "erotikk", "erotisk", "porno", "voksen", "voksne",
+  // Danois
+  "erotisk", "porno", "voksne", "for voksne",
+  // Finnois
+  "eroottinen", "erotiikka", "porno", "aikuisille",
+  // Estonien
+  "erootika", "erootiline", "porno", "täiskasvanutele",
+  // Letton
+  "erotika", "erotisks", "porno", "pieaugušajiem",
+  // Lituanien
+  "erotika", "erotinis", "porno", "suaugusiems",
+  // Albanais
+  "erotik", "pornografi", "për të rritur",
+  // Grec
+  "ερωτικό", "ερωτισμός", "πορνογραφία", "ενηλίκων",
+  // Turc
+  "erotik", "pornografi", "yetişkin",
+  // Arabe (Égypte, Arabie Saoudite, EAU)
+  "إثارة", "إباحي", "للكبار", "بالغين",
+  // Hébreu
+  "ארוטי", "פורנו", "למבוגרים",
+  // Chinois
+  "成人", "色情", "情色",
+  // Japonais
+  "アダルト", "成人", "エロ",
+  // Coréen
+  "성인", "에로",
+  // Thaï
+  "ผู้ใหญ่", "อีโรติก",
+  // Indonésien/Malais
+  "dewasa", "erotis", "porno",
+  // Vietnamien
+  "người lớn", "khiêu dâm", "tình dục",
+  // Hindi
+  "वयस्क", "अश्लील", "एडल्ट",
+  // Bengali
+  "প্রাপ্তবয়স্ক", "অশ্লীল"
+];
+
+// ─── WORLD CUP CATEGORIES (toutes langues) ───
+const WORLDCUP_TITLES = [
+  // Anglais
+  "world cup", "fifa world cup", "fifa world cup 2026", "wc 2026", "fifa 2026",
+  // Français
+  "coupe du monde", "coupe du monde 2026", "mondial", "mondial 2026", "cdm 2026",
+  // Espagnol
+  "copa del mundo", "copa mundial", "mundial", "mundial 2026", "copa mundial fifa",
+  // Italien
+  "coppa del mondo", "mondiali", "mondiali 2026", "coppa del mondo fifa",
+  // Allemand
+  "weltmeisterschaft", "wm 2026", "fußball-wm", "fifa weltmeisterschaft",
+  // Néerlandais
+  "wereldkampioenschap", "wk 2026", "wk voetbal",
+  // Polonais
+  "mistrzostwa świata", "mś 2026", "mundial",
+  // Portugais
+  "copa do mundo", "copa do mundo 2026", "mundial 2026",
+  // Russe
+  "чемпионат мира", "чм 2026", "кубок мира",
+  // Ukrainien
+  "чемпіонат світу", "чс 2026",
+  // Tchèque
+  "mistrovství světa", "ms 2026", "fotbalové ms",
+  // Slovaque
+  "majstrovstvá sveta", "ms 2026",
+  // Hongrois
+  "világbajnokság", "vb 2026",
+  // Roumain
+  "campionatul mondial", "cupa mondială",
+  // Bulgare
+  "световно първенство", "световен куп",
+  // Serbe/Croate
+  "svjetsko prvenstvo", "svetsko prvenstvo", "sp 2026",
+  // Slovène
+  "svetovno prvenstvo",
+  // Suédois
+  "vm 2026", "fifa-vm", "världsmästerskap",
+  // Norvégien
+  "vm 2026", "verdensmesterskap",
+  // Danois
+  "vm 2026", "verdensmesterskab",
+  // Finnois
+  "mm 2026", "maailmanmestaruus",
+  // Grec
+  "παγκόσμιο κύπελλο", "παγκόσμιο πρωτάθλημα",
+  // Turc
+  "dünya kupası", "fifa dünya kupası",
+  // Arabe
+  "كأس العالم", "كأس العالم 2026",
+  // Hébreu
+  "גביע העולם", "מונדיאל",
+  // Chinois
+  "世界杯", "国际足联世界杯",
+  // Japonais
+  "ワールドカップ", "fifaワールドカップ",
+  // Coréen
+  "월드컵", "fifa 월드컵",
+  // Thaï
+  "ฟุตบอลโลก",
+  // Indonésien
+  "piala dunia", "piala dunia fifa",
+  // Vietnamien
+  "world cup", "cúp thế giới",
+  // Hindi
+  "विश्व कप", "फीफा विश्व कप",
+  // Bengali
+  "বিশ্বকাপ"
+];
+
+// ─── EXCLUSIONS (dessins animés, séries, etc.) ───
+const EXCLUSIONS = [
+  "dessin animé", "cartoon", "animated", "anime", "manga", "kids", "children", "enfant", "jeunesse", "famille", "family", "kinder", "kinderfilm", "dibujos animados", "cartone animato", "kreskówka", "bajka", "kreskówki"
+];
+
 function isEroticProgram(title: string, desc: string, cats: string[]): boolean {
-  const hay = `${title} ${desc} ${cats.join(" ")}`.toLowerCase();
-  const eroticKeywords = ["erotic", "érotique", "erótico", "erotico", "erotisch", "erotyka", "erotik", "erotikfilm", "erotisches herzkino", "knisternde erotik", "erotismo", "películas eróticas", "cinema erotico", "sessualita", "film erotici", "sensuel", "sensual", "sensuale", "pornographique", "pornographic", "porn", "adult", "xxx", "adultos", "erotici", "pornografici", "pornográficas", "eróticas", "erotiek", "volwassenen", "porno", "porna", "erotych", "erotyczny", "dorośli", "dla dorosłych", "heiss", "sexy", "adulti"];
-  return eroticKeywords.some(kw => hay.includes(kw));
+  const titleLower = title.toLowerCase();
+  
+  // Exclure dessins animés/jeunesse
+  if (EXCLUSIONS.some(kw => titleLower.includes(kw))) return false;
+  
+  // Vérifier les catégories explicitement érotiques
+  const catsLower = cats.map(c => c.toLowerCase()).join(" ");
+  return EROTIC_CATEGORIES.some(kw => catsLower.includes(kw));
 }
 
 function isWorldCupMatch(title: string, desc: string, cats: string[]): boolean {
-  const hay = `${title} ${desc} ${cats.join(" ")}`.toLowerCase();
-  return hay.includes("coupe du monde") || hay.includes("world cup") || hay.includes("fifa") || hay.includes("match") || hay.includes("football");
+  const titleLower = title.toLowerCase();
+  const descLower = desc.toLowerCase();
+  
+  // Catégorie sport obligatoire
+  const catsLower = cats.map(c => c.toLowerCase()).join(" ");
+  const isSport = catsLower.includes("sport") || catsLower.includes("fußball") || catsLower.includes("football") || catsLower.includes("soccer") || catsLower.includes("fútbol") || catsLower.includes("calcio") || catsLower.includes("voetbal") || catsLower.includes("piłka nożna") || catsLower.includes("futebol");
+  if (!isSport) return false;
+  
+  // Exclure dessins animés
+  if (EXCLUSIONS.some(kw => titleLower.includes(kw))) return false;
+  
+  // Doit mentionner la Coupe du Monde
+  const text = `${titleLower} ${descLower}`;
+  return WORLDCUP_TITLES.some(kw => text.includes(kw));
 }
 
 async function fetchEPG(countryCode: string) {
@@ -98,7 +264,6 @@ async function fetchEPG(countryCode: string) {
     const now = Date.now();
     const channels: Record<string, string> = {};
     
-    // Parse channels
     for (const ch of asArray<any>(tv.channel)) {
       const id = ch["@_id"];
       if (!id) continue;
@@ -109,7 +274,6 @@ async function fetchEPG(countryCode: string) {
     const erotica: any[] = [];
     const worldcup: any[] = [];
     
-    // Parse programmes
     for (const p of asArray<any>(tv.programme)) {
       const start = p["@_start"];
       const stop = p["@_stop"];
@@ -121,7 +285,6 @@ async function fetchEPG(countryCode: string) {
       
       const startMs = new Date(startTime).getTime();
       const stopMs = new Date(stopTime).getTime();
-      
       if (!(startMs <= now && now < stopMs)) continue;
       
       const channelId = p["@_channel"];
@@ -132,12 +295,8 @@ async function fetchEPG(countryCode: string) {
       
       const prog = { channel: channelName, title, desc, start: startTime, stop: stopTime };
       
-      if (isEroticProgram(title, desc, cats)) {
-        erotica.push(prog);
-      }
-      if (isWorldCupMatch(title, desc, cats)) {
-        worldcup.push(prog);
-      }
+      if (isEroticProgram(title, desc, cats)) erotica.push(prog);
+      if (isWorldCupMatch(title, desc, cats)) worldcup.push(prog);
     }
     
     return { erotica, worldcup };
@@ -151,7 +310,6 @@ export default async (req: Request) => {
     const url = new URL(req.url);
     const countriesParam = url.searchParams.get("countries") || "";
     
-    // Retourne liste de pays si pas de sélection
     if (!countriesParam) {
       return Response.json({
         countries: COUNTRIES.map(cc => ({
@@ -162,13 +320,11 @@ export default async (req: Request) => {
       }, { headers: { "Cache-Control": "public, max-age=3600" } });
     }
     
-    // Parse les pays demandés
     const selectedCountries = countriesParam.split(",").filter(c => COUNTRIES.includes(c));
     if (selectedCountries.length === 0) {
       return Response.json({ error: "Aucun pays valide", erotica: [], worldcup: [] }, { status: 200 });
     }
     
-    // Charge les pays sélectionnés
     const epgPromises = selectedCountries.map(cc => fetchEPG(cc));
     const epgResults = await Promise.all(epgPromises);
     
@@ -177,23 +333,11 @@ export default async (req: Request) => {
     
     selectedCountries.forEach((cc, idx) => {
       const result = epgResults[idx] || { erotica: [], worldcup: [] };
-      
       result.erotica.forEach(p => {
-        allErotica.push({
-          ...p,
-          country: cc,
-          countryName: COUNTRY_NAMES[cc] || cc.toUpperCase(),
-          flag: COUNTRY_FLAGS[cc] || "🌍"
-        });
+        allErotica.push({ ...p, country: cc, countryName: COUNTRY_NAMES[cc] || cc.toUpperCase(), flag: COUNTRY_FLAGS[cc] || "🌍" });
       });
-      
       result.worldcup.forEach(p => {
-        allWorldcup.push({
-          ...p,
-          country: cc,
-          countryName: COUNTRY_NAMES[cc] || cc.toUpperCase(),
-          flag: COUNTRY_FLAGS[cc] || "🌍"
-        });
+        allWorldcup.push({ ...p, country: cc, countryName: COUNTRY_NAMES[cc] || cc.toUpperCase(), flag: COUNTRY_FLAGS[cc] || "🌍" });
       });
     });
     
@@ -207,6 +351,4 @@ export default async (req: Request) => {
   }
 };
 
-export const config: Config = {
-  path: "/api/monde-live",
-};
+export const config: Config = { path: "/api/monde-live" };
