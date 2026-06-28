@@ -37,61 +37,17 @@ const COUNTRY_FLAGS: Record<string, string> = {
   il: "🇮🇱", ng: "🇳🇬", za: "🇿🇦", ke: "🇰🇪", us: "🇺🇸", ca: "🇨🇦"
 };
 
-// ─── CLASSIFICATION AUTO DES CHAÎNES ───
 function classifyChannel(channelName: string): { type: string; icon: string } {
   const name = channelName.toLowerCase().trim();
-  
-  // SPORT
-  if (/\b(sport|sports|sportv|sport tv|espn|bein|eurosport|sky sport|fox sport|nbc sport|rai sport|infosport|canal\+? sport|equipe|deporte|deportes|sportkanal|sportkanaal|sportszene|спорт|sportowy|football|futbol|fußball|calcio|tennis|nfl|nba|mlb|nhl|f1|formula|motogp|wrc|premier league|champions league|ligue 1|serie a|bundesliga|laliga)\b/i.test(name)) {
-    return { type: "sport", icon: "⚽" };
-  }
-  
-  // CINEMA / FILMS
-  if (/\b(cinema|cinéma|cine|movies?|filme?|kino|sky cinema|canal\+? cinema|action|aventure|thriller|horror|comedie|drame|drama|cinemax|moviestar|moviemax|fox movies|paramount|warner|hollywood|kinopolska|кино)\b/i.test(name)) {
-    return { type: "cinema", icon: "🎬" };
-  }
-  
-  // INFO / NEWS
-  if (/\b(news|info|infos|actu|actualité|cnn|bbc news|bfm|france info|euronews|sky news|fox news|al jazeera|rt|россия 24|wiadomości|tg|telejornal|noticias|nachrichten|24h|24/7|live news|breaking|journal|n-tv|notiziario)\b/i.test(name)) {
-    return { type: "info", icon: "📰" };
-  }
-  
-  // ADULTE / ÉROTIQUE
-  if (/\b(adult|adulte|adults|adultos|erotic|érotique|erotik|erotico|porn|porno|playboy|hustler|xxx|hot|sexy|sex|brazzers|spice|private|premium tv|red light|venus)\b/i.test(name)) {
-    return { type: "adulte", icon: "🔞" };
-  }
-  
-  // JEUNESSE / ENFANTS
-  if (/\b(disney|nick|nickelodeon|cartoon|kids|enfants|gulli|tiji|piwi|baby|junior|kiddoodles|disney channel|pl jr|cartoonito|boomerang|teletoon|nick jr|jim jam|baby tv|kiddoodles|pokemon|kayoom|разумник|dzieci|infantil|niños)\b/i.test(name)) {
-    return { type: "jeunesse", icon: "🧒" };
-  }
-  
-  // MUSIQUE
-  if (/\b(mtv|mcm|music|musique|musical|nrj|virgin|trace|m6 music|vh1|kiss tv|hit|melody|stingray|musica|musik|музыка|deezer|spotify)\b/i.test(name)) {
-    return { type: "musique", icon: "🎵" };
-  }
-  
-  // DOCUMENTAIRE
-  if (/\b(discovery|national geographic|nat geo|natgeo|histoire|history|geo|geographic|earth|planet|wildlife|nature|animal|animaux|science|doc|documentaire|documentary|документал|dokument|geo wild|geo earth)\b/i.test(name)) {
-    return { type: "documentaire", icon: "🌍" };
-  }
-  
-  // INTERNATIONAL
-  if (/\b(tv5|euronews|france 24|deutsche welle|dw|al jazeera|cnn international|bbc world|rt|rfi|nhk world|cgtn|press tv)\b/i.test(name)) {
-    return { type: "international", icon: "🌐" };
-  }
-  
-  // DIVERTISSEMENT
-  if (/\b(comedy|comédie|humour|humor|entertainment|divertissement|reality|nrj12|tf1 séries|w9|c8|6ter|tmc|tf x|paris première|tv land|tf6|stadthaubitze|teen|fashion tv|fashion)\b/i.test(name)) {
-    return { type: "divertissement", icon: "🎭" };
-  }
-  
-  // GÉNÉRALISTE (par défaut - main channels)
-  if (/\b(tf1|france 2|france 3|france 4|france 5|france ô|france info|m6|w9|c8|6ter|tmc|paris première|nrj12|bbc one|bbc two|bbc four|itv|channel 4|channel 5|ard|zdf|rtl|sat\.?1|pro7|prosieben|kabel|3sat|swr|wdr|ndr|hr|mdr|tve|antena|telecinco|cuatro|la 1|la 2|rai 1|rai 2|rai 3|rai 4|rai 5|canale 5|italia 1|rete 4|tve la 1|antena 3|laraía|rtbf|vrt|één|canvas|ketnet|vtm|sbs6|net5|veronica|rtl 4|rtl 5|rtl 7|rtl 8|polsat|tvn|tvp 1|tvp 2|tvp info|rtv slo|rtv 4|tve|estonia|россия 1|первый|перший|перший|stb|1\+1|inter)\b/i.test(name)) {
-    return { type: "generaliste", icon: "📺" };
-  }
-  
-  // PAR DÉFAUT
+  if (/\b(sport|sports|sportv|espn|bein|eurosport|sky sport|fox sport|nbc sport|rai sport|equipe|deporte|deportes|football|futbol|fußball|calcio|tennis|nfl|nba|f1|formula|motogp|premier league|champions league|ligue 1|serie a|bundesliga|laliga)\b/i.test(name)) return { type: "sport", icon: "⚽" };
+  if (/\b(cinema|cinéma|cine|movies?|filme?|kino|sky cinema|canal\+? cinema|action|aventure|thriller|cinemax|moviestar|hollywood|fox movies|paramount|warner)\b/i.test(name)) return { type: "cinema", icon: "🎬" };
+  if (/\b(news|info|infos|actu|cnn|bbc news|bfm|france info|euronews|sky news|fox news|al jazeera|wiadomości|tg|noticias|nachrichten|24h|breaking|journal)\b/i.test(name)) return { type: "info", icon: "📰" };
+  if (/\b(adult|adulte|adults|adultos|erotic|érotique|erotik|erotico|porn|porno|playboy|hustler|xxx|brazzers|spice|private|venus)\b/i.test(name)) return { type: "adulte", icon: "🔞" };
+  if (/\b(disney|nick|nickelodeon|cartoon|kids|enfants|gulli|tiji|piwi|baby|junior|disney channel|teletoon|nick jr|baby tv|pokemon|dzieci|infantil|niños)\b/i.test(name)) return { type: "jeunesse", icon: "🧒" };
+  if (/\b(mtv|mcm|music|musique|musical|nrj|virgin|trace|vh1|melody|stingray|musica|musik)\b/i.test(name)) return { type: "musique", icon: "🎵" };
+  if (/\b(discovery|national geographic|nat geo|natgeo|histoire|history|geo|geographic|earth|planet|wildlife|nature|animal|animaux|science|documentaire|documentary|dokument)\b/i.test(name)) return { type: "documentaire", icon: "🌍" };
+  if (/\b(tv5|euronews|france 24|deutsche welle|dw|al jazeera|cnn international|bbc world|rt|rfi|nhk world|cgtn|press tv)\b/i.test(name)) return { type: "international", icon: "🌐" };
+  if (/\b(comedy|comédie|humour|humor|entertainment|divertissement|reality|nrj12|tf1 séries|w9|c8|6ter|tmc|tf x|paris première|fashion tv|fashion)\b/i.test(name)) return { type: "divertissement", icon: "🎭" };
   return { type: "generaliste", icon: "📺" };
 }
 
@@ -118,79 +74,69 @@ function textOf(node: any): string {
 
 function decode(s: string): string {
   if (!s) return s;
-  return s
-    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+  return s.replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCodePoint(parseInt(h, 16)))
     .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(parseInt(d, 10)))
     .replace(/&apos;/g, "'").replace(/&quot;/g, '"')
     .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
 }
 
-const EROTIC_CATEGORIES = [
-  "erotic", "erotica", "porn", "pornography", "adult", "adult film", "adult movie", "xxx", "x-rated",
-  "érotique", "érotisme", "pornographique", "porno", "adulte", "film adulte", "film érotique",
-  "erótico", "erotismo", "pornográfico", "adultos", "películas eróticas", "pornográficas", "eróticas",
-  "erotico", "erotici", "pornografico", "pornografici", "adulti", "cinema erotico", "film erotici", "sessualita",
-  "erotisch", "erotik", "erotikfilm", "erotisches herzkino", "knisternde erotik", "erwachsene", "fsk 18",
-  "erotiek", "volwassenen", "porna", "voor volwassenen",
-  "erotyka", "erotyczny", "dla dorosłych", "dorośli", "erotyczne",
-  "erótico", "pornografia", "adultos", "filme erótico",
-  "эротика", "эротический", "порно", "для взрослых", "взрослые",
-  "еротика", "еротичний", "порно", "для дорослих",
-  "erotický", "pornografie", "dospělí", "dospelí",
-  "erotikus", "erotika", "pornográfia", "felnőtt",
-  "erotic", "erotism", "adulți",
-  "еротичен", "еротика", "за възрастни",
-  "erotski", "erotika", "za odrasle", "odrasli",
-  "erotik", "erotisk", "porr", "vuxen", "för vuxna",
-  "erotikk", "porno", "voksen", "voksne",
-  "erotisk", "voksne", "for voksne",
-  "eroottinen", "erotiikka", "aikuisille",
-  "erootika", "erootiline", "täiskasvanutele",
-  "erotika", "erotisks", "pieaugušajiem",
-  "erotika", "erotinis", "suaugusiems",
-  "ερωτικό", "ερωτισμός", "ενηλίκων",
-  "erotik", "yetişkin",
-  "إثارة", "إباحي", "للكبار", "بالغين",
-  "ארוטי", "פורנו", "למבוגרים",
-  "成人", "色情", "情色", "アダルト", "成人", "エロ",
-  "성인", "에로", "ผู้ใหญ่", "อีโรติก",
-  "dewasa", "erotis", "porno", "người lớn", "khiêu dâm", "tình dục",
-  "वयस्क", "अश्लील", "एडल्ट", "প্রাপ্তবয়স্ক", "অশ্লীল"
-];
+function normalizeChannelName(name: string): string {
+  return name.toLowerCase()
+    .replace(/[^a-z0-9]/g, "")
+    .replace(/hd|fhd|uhd|4k|sd/g, "");
+}
 
-const WORLDCUP_TITLES = [
-  "world cup", "fifa world cup", "fifa world cup 2026", "wc 2026", "fifa 2026",
-  "coupe du monde", "coupe du monde 2026", "mondial", "mondial 2026", "cdm 2026",
-  "copa del mundo", "copa mundial", "mundial", "mundial 2026", "copa mundial fifa",
-  "coppa del mondo", "mondiali", "mondiali 2026", "coppa del mondo fifa",
-  "weltmeisterschaft", "wm 2026", "fußball-wm", "fifa weltmeisterschaft",
-  "wereldkampioenschap", "wk 2026", "wk voetbal",
-  "mistrzostwa świata", "mś 2026",
-  "copa do mundo", "copa do mundo 2026",
-  "чемпионат мира", "чм 2026", "кубок мира",
-  "чемпіонат світу", "чс 2026",
-  "mistrovství světa", "ms 2026",
-  "majstrovstvá sveta",
-  "világbajnokság", "vb 2026",
-  "campionatul mondial", "cupa mondială",
-  "световно първенство",
-  "svjetsko prvenstvo", "svetsko prvenstvo", "sp 2026",
-  "svetovno prvenstvo",
-  "vm 2026", "verdensmesterskap", "verdensmesterskab",
-  "mm 2026", "maailmanmestaruus",
-  "παγκόσμιο κύπελλο",
-  "dünya kupası", "fifa dünya kupası",
-  "كأس العالم", "كأس العالم 2026",
-  "גביע העולם", "מונדיאל",
-  "世界杯", "ワールドカップ", "월드컵",
-  "ฟุตบอลโลก",
-  "piala dunia", "world cup", "cúp thế giới",
-  "विश्व कप", "फीफा विश्व कप", "বিশ্বকাপ"
-];
+// ─── M3U Cache ───
+const m3uCache: Record<string, Record<string, string>> = {};
 
-const EXCLUSIONS = ["dessin animé", "cartoon", "animated", "anime", "kids", "children", "kinder", "kinderfilm", "dibujos animados", "cartone animato", "kreskówka"];
+async function fetchM3U(countryCode: string): Promise<Record<string, string>> {
+  if (m3uCache[countryCode]) return m3uCache[countryCode];
+  
+  try {
+    const url = `https://iptv-org.github.io/iptv/countries/${countryCode}.m3u`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000);
+    
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+    
+    if (!res.ok) {
+      m3uCache[countryCode] = {};
+      return {};
+    }
+    
+    const text = await res.text();
+    const channels: Record<string, string> = {};
+    const lines = text.split("\n");
+    
+    let currentName = "";
+    for (const line of lines) {
+      if (line.startsWith("#EXTINF:")) {
+        // Extract channel name (after the last comma)
+        const match = line.match(/,(.+)$/);
+        if (match) currentName = match[1].trim();
+      } else if (line.startsWith("http") && currentName) {
+        const key = normalizeChannelName(currentName);
+        if (key && !channels[key]) channels[key] = line.trim();
+        currentName = "";
+      }
+    }
+    
+    m3uCache[countryCode] = channels;
+    return channels;
+  } catch (e) {
+    m3uCache[countryCode] = {};
+    return {};
+  }
+}
 
-function isEroticProgram(title: string, desc: string, cats: string[]): boolean {
+const EROTIC_CATEGORIES = ["erotic", "erotica", "porn", "adult", "xxx", "érotique", "pornographique", "porno", "adulte", "erótico", "erotismo", "adultos", "erotico", "erotici", "adulti", "erotisch", "erotik", "erotikfilm", "erotiek", "volwassenen", "erotyka", "erotyczny", "эротика", "erotický", "erotikus", "еротичен", "erotski", "erotik", "erotisk", "erotikk", "erootika", "erotika", "ερωτικό", "إثارة", "إباحي", "ארוטי", "成人", "色情", "アダルト", "성인", "อีโรติก", "dewasa", "khiêu dâm", "वयस्क", "প্রাপ্তবয়স্ক"];
+
+const WORLDCUP_TITLES = ["world cup", "fifa world cup", "wc 2026", "coupe du monde", "mondial", "cdm 2026", "copa mundial", "mundial", "coppa del mondo", "mondiali", "weltmeisterschaft", "wm 2026", "fußball-wm", "wereldkampioenschap", "wk 2026", "mistrzostwa świata", "mś 2026", "copa do mundo", "чемпионат мира", "чм 2026", "чемпіонат світу", "mistrovství světa", "ms 2026", "világbajnokság", "vb 2026", "campionatul mondial", "световно първенство", "svjetsko prvenstvo", "svetovno prvenstvo", "vm 2026", "mm 2026", "παγκόσμιο κύπελλο", "dünya kupası", "كأس العالم", "גביע העולם", "世界杯", "ワールドカップ", "월드컵", "ฟุตบอลโลก", "piala dunia", "विश्व कप", "বিশ্বকাপ"];
+
+const EXCLUSIONS = ["dessin animé", "cartoon", "animated", "anime", "kids", "children", "kinder", "dibujos animados", "cartone animato", "kreskówka"];
+
+function isEroticProgram(title: string, cats: string[]): boolean {
   const titleLower = title.toLowerCase();
   if (EXCLUSIONS.some(kw => titleLower.includes(kw))) return false;
   const catsLower = cats.map(c => c.toLowerCase()).join(" ");
@@ -201,24 +147,32 @@ function isWorldCupMatch(title: string, desc: string, cats: string[]): boolean {
   const titleLower = title.toLowerCase();
   const descLower = desc.toLowerCase();
   const catsLower = cats.map(c => c.toLowerCase()).join(" ");
-  const isSport = catsLower.includes("sport") || catsLower.includes("fußball") || catsLower.includes("football") || catsLower.includes("soccer") || catsLower.includes("fútbol") || catsLower.includes("calcio") || catsLower.includes("voetbal") || catsLower.includes("piłka nożna");
+  const isSport = catsLower.includes("sport") || catsLower.includes("fußball") || catsLower.includes("football") || catsLower.includes("soccer") || catsLower.includes("fútbol") || catsLower.includes("calcio");
   if (!isSport) return false;
   if (EXCLUSIONS.some(kw => titleLower.includes(kw))) return false;
   const text = `${titleLower} ${descLower}`;
   return WORLDCUP_TITLES.some(kw => text.includes(kw));
 }
 
-async function fetchEPG(countryCode: string) {
+async function fetchEPG(countryCode: string, timeoutMs = 5000) {
   try {
-    const url = `https://iptv-epg.org/files/epg-${countryCode}.xml.gz`;
-    const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
-    if (!res.ok) return { erotica: [], worldcup: [] };
-    
-    const buf = Buffer.from(await res.arrayBuffer());
-    const xml = gunzipSync(buf).toString("utf-8");
+    // Fetch EPG + M3U en parallèle
+    const [epgResult, m3uChannels] = await Promise.all([
+      (async () => {
+        const url = `https://iptv-epg.org/files/epg-${countryCode}.xml.gz`;
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), timeoutMs);
+        const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" }, signal: controller.signal });
+        clearTimeout(timeout);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const buf = Buffer.from(await res.arrayBuffer());
+        return gunzipSync(buf).toString("utf-8");
+      })(),
+      fetchM3U(countryCode)
+    ]);
     
     const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@_", trimValues: true, processEntities: false });
-    const doc = parser.parse(xml);
+    const doc = parser.parse(epgResult);
     const tv = doc.tv ?? {};
     
     const now = Date.now();
@@ -251,6 +205,10 @@ async function fetchEPG(countryCode: string) {
       const channelName = channels[channelId] || channelId;
       const channelClass = classifyChannel(channelName);
       
+      // Match avec M3U
+      const normalized = normalizeChannelName(channelName);
+      const streamUrl = m3uChannels[normalized] || null;
+      
       const title = decode(textOf(asArray<any>(p.title)[0])) || "Sans titre";
       const desc = decode(textOf(asArray<any>(p.desc)[0])) || "";
       const cats = asArray<any>(p.category).map(textOf).map(decode).filter(Boolean);
@@ -259,17 +217,43 @@ async function fetchEPG(countryCode: string) {
         channel: channelName, 
         channelType: channelClass.type,
         channelIcon: channelClass.icon,
+        streamUrl,
         title, desc, start: startTime, stop: stopTime 
       };
       
-      if (isEroticProgram(title, desc, cats)) erotica.push(prog);
+      if (isEroticProgram(title, cats)) erotica.push(prog);
       if (isWorldCupMatch(title, desc, cats)) worldcup.push(prog);
     }
     
     return { erotica, worldcup };
-  } catch (e) {
-    return { erotica: [], worldcup: [] };
+  } catch (e: any) {
+    return { erotica: [], worldcup: [], error: e?.message || "Erreur" };
   }
+}
+
+async function fetchInBatches(codes: string[], batchSize = 5) {
+  const allErotica: any[] = [];
+  const allWorldcup: any[] = [];
+  const errors: string[] = [];
+  
+  for (let i = 0; i < codes.length; i += batchSize) {
+    const batch = codes.slice(i, i + batchSize);
+    const results = await Promise.all(batch.map(cc => fetchEPG(cc)));
+    
+    batch.forEach((cc, idx) => {
+      const result = results[idx];
+      if (result.error) errors.push(`${cc}: ${result.error}`);
+      
+      result.erotica.forEach((p: any) => {
+        allErotica.push({ ...p, country: cc, countryName: COUNTRY_NAMES[cc] || cc.toUpperCase(), flag: COUNTRY_FLAGS[cc] || "🌍" });
+      });
+      result.worldcup.forEach((p: any) => {
+        allWorldcup.push({ ...p, country: cc, countryName: COUNTRY_NAMES[cc] || cc.toUpperCase(), flag: COUNTRY_FLAGS[cc] || "🌍" });
+      });
+    });
+  }
+  
+  return { erotica: allErotica, worldcup: allWorldcup, errors };
 }
 
 export default async (req: Request) => {
@@ -292,27 +276,17 @@ export default async (req: Request) => {
       return Response.json({ error: "Aucun pays valide", erotica: [], worldcup: [] }, { status: 200 });
     }
     
-    const epgPromises = selectedCountries.map(cc => fetchEPG(cc));
-    const epgResults = await Promise.all(epgPromises);
-    
-    const allErotica: any[] = [];
-    const allWorldcup: any[] = [];
-    
-    selectedCountries.forEach((cc, idx) => {
-      const result = epgResults[idx] || { erotica: [], worldcup: [] };
-      result.erotica.forEach(p => {
-        allErotica.push({ ...p, country: cc, countryName: COUNTRY_NAMES[cc] || cc.toUpperCase(), flag: COUNTRY_FLAGS[cc] || "🌍" });
-      });
-      result.worldcup.forEach(p => {
-        allWorldcup.push({ ...p, country: cc, countryName: COUNTRY_NAMES[cc] || cc.toUpperCase(), flag: COUNTRY_FLAGS[cc] || "🌍" });
-      });
-    });
+    const { erotica, worldcup, errors } = await fetchInBatches(selectedCountries, 5);
     
     return Response.json({
       generatedAt: new Date().toISOString(),
-      erotica: allErotica.sort((a, b) => a.start.localeCompare(b.start)),
-      worldcup: allWorldcup.sort((a, b) => a.start.localeCompare(b.start))
-    }, { headers: { "Cache-Control": "public, max-age=300, s-maxage=3600" } });
+      countriesProcessed: selectedCountries.length,
+      errors: errors.length,
+      erotica: erotica.sort((a, b) => a.start.localeCompare(b.start)),
+      worldcup: worldcup.sort((a, b) => a.start.localeCompare(b.start))
+    }, { 
+      headers: { "Cache-Control": "public, max-age=600, s-maxage=3600, stale-while-revalidate=86400" } 
+    });
   } catch (e: any) {
     return Response.json({ error: e?.message || "Erreur serveur", erotica: [], worldcup: [] }, { status: 200 });
   }
