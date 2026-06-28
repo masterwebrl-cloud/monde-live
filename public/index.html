@@ -312,8 +312,15 @@ function renderResults() {
       html += `<div class="state">Aucun film érotique en ce moment</div>`;
     } else {
       html += `<div class="items">`;
-      erotica.forEach(p => {
+      erotica.forEach((p, idx) => {
         const time = new Date(p.start).toLocaleTimeString("fr-FR", {hour: "2-digit", minute: "2-digit"});
+        const streamActions = p.streamUrl 
+          ? `<div class="item-actions">
+              <button onclick="window.open('${p.streamUrl}', '_blank')">📺 Regarder</button>
+              <button class="copy-btn" onclick="copyStreamUrl('${p.streamUrl}', this)">📋 Copier M3U</button>
+            </div>`
+          : `<div class="item-actions"><button class="no-stream" disabled>🔒 Stream indisponible</button></div>`;
+        
         html += `<div class="item erotica">
           <div class="item-header">
             <span class="item-flag">${p.flag}</span>
@@ -323,6 +330,7 @@ function renderResults() {
               <div class="item-channel">${p.channelIcon || '📺'} ${p.channel}</div>
               <div class="item-time">${time}</div>
               <span class="item-badge">EN DIRECT</span>
+              ${streamActions}
             </div>
           </div>
         </div>`;
@@ -341,6 +349,13 @@ function renderResults() {
       html += `<div class="items">`;
       worldcup.forEach(p => {
         const time = new Date(p.start).toLocaleTimeString("fr-FR", {hour: "2-digit", minute: "2-digit"});
+        const streamActions = p.streamUrl 
+          ? `<div class="item-actions">
+              <button onclick="window.open('${p.streamUrl}', '_blank')">📺 Regarder</button>
+              <button class="copy-btn" onclick="copyStreamUrl('${p.streamUrl}', this)">📋 Copier M3U</button>
+            </div>`
+          : `<div class="item-actions"><button class="no-stream" disabled>🔒 Stream indisponible</button></div>`;
+        
         html += `<div class="item worldcup">
           <div class="item-header">
             <span class="item-flag">${p.flag}</span>
@@ -350,6 +365,7 @@ function renderResults() {
               <div class="item-channel">${p.channelIcon || '📺'} ${p.channel}</div>
               <div class="item-time">${time}</div>
               <span class="item-badge">EN DIRECT</span>
+              ${streamActions}
             </div>
           </div>
         </div>`;
@@ -370,6 +386,20 @@ function goBack() {
   state.stage = "select";
   state.filter = "all";
   renderSelector();
+}
+
+function copyStreamUrl(url, btn) {
+  navigator.clipboard.writeText(url).then(() => {
+    const original = btn.textContent;
+    btn.textContent = "✅ Copié !";
+    btn.style.background = "var(--match)";
+    setTimeout(() => {
+      btn.textContent = original;
+      btn.style.background = "";
+    }, 2000);
+  }).catch(() => {
+    alert("URL: " + url);
+  });
 }
 
 init();
